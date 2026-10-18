@@ -265,6 +265,7 @@
   function deleteList(list) {
     if (!confirm(`Usunąć listę „${list.name}”? Tej operacji nie można cofnąć.`)) return;
     state.lists = state.lists.filter(l => l.id !== list.id);
+    forgetPdf(list.id);
     if (selectedId === list.id) selectedId = null;
     save(); render();
   }
@@ -377,31 +378,61 @@
     };
   }
 
+  // Zamknięta lista już się nie zmienia, więc PDF przygotowujemy z wyprzedzeniem
+  // (przy jej wyświetleniu). Kliknięcie tylko otwiera gotowy plik — generowanie po
+  // otwarciu nowej karty trwało długo, bo przeglądarka spowalnia karty w tle.
+  const pdfJobs = {};   // id listy -> Promise z adresem PDF
+  const pdfUrls = {};   // id listy -> gotowy adres PDF
+
+  function preparePdf(list) {
+    if (!window.pdfMake || !list.closedAt) return null;
+    if (!pdfJobs[list.id]) {
+      pdfJobs[list.id] = new Promise(resolve => {
+        pdfMake.createPdf(pdfDefinition(list)).getBlob(blob => {
+          pdfUrls[list.id] = URL.createObjectURL(blob);
+          resolve(pdfUrls[list.id]);
+        });
+      });
+    }
+    return pdfJobs[list.id];
+  }
+
+  function forgetPdf(id) {
+    if (pdfUrls[id]) URL.revokeObjectURL(pdfUrls[id]);
+    delete pdfUrls[id];
+    delete pdfJobs[id];
+  }
+
+  function downloadPdf(url, list) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${list.name.replace(/[\\/:*?"<>|]+/g, '_')} - raport czasu.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
   function exportPdf(list) {
     if (!window.pdfMake) {
       alert('Nie udało się załadować biblioteki PDF (folder lib/).');
       return;
     }
-    // Kartę otwieramy od razu po kliknięciu — otwarta później (po wygenerowaniu PDF)
-    // zostałaby zablokowana jako wyskakujące okno, zwłaszcza na telefonie.
+    const ready = pdfUrls[list.id];
+    if (ready) {
+      // Karta zablokowana — pobierz plik bezpośrednio.
+      if (!window.open(ready, '_blank')) downloadPdf(ready, list);
+      return;
+    }
+    // PDF jeszcze się tworzy: kartę otwieramy od razu po kliknięciu — otwarta później
+    // zostałaby zablokowana jako wyskakujące okno.
     const win = window.open('', '_blank');
     if (win) {
       win.document.title = 'Generowanie PDF…';
       win.document.body.innerHTML = '<p style="font-family:sans-serif;padding:20px">Generowanie PDF…</p>';
     }
-    pdfMake.createPdf(pdfDefinition(list)).getBlob(blob => {
-      const url = URL.createObjectURL(blob);
-      if (win && !win.closed) {
-        win.location.href = url;
-      } else {
-        // Karta zablokowana — pobierz plik bezpośrednio.
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${list.name.replace(/[\\/:*?"<>|]+/g, '_')} - raport czasu.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      }
+    preparePdf(list).then(url => {
+      if (win && !win.closed) win.location.href = url;
+      else downloadPdf(url, list);
     });
   }
 
@@ -437,6 +468,7 @@
     const closed = !!list.closedAt;
     const doneCount = list.tasks.filter(t => t.done).length;
     const closable = canClose(list);
+    if (closed) preparePdf(list);
 
     let notice = '';
     if (!closed) {
