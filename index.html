@@ -172,6 +172,24 @@
     .task { grid-template-columns: 1fr auto; }
     .task .btns { grid-column: 1 / -1; justify-content: flex-end; }
   }
+
+  #printReport { display: none; }
+  @media print {
+    @page { size: A4; margin: 18mm; }
+    body { background: #fff; color: #111; font-size: 12pt; }
+    .app { display: none; }
+    #printReport { display: block; }
+    #printReport h1 { font-size: 20pt; margin: 0 0 4pt; }
+    #printReport .meta { color: #555; font-size: 10pt; margin-bottom: 16pt; line-height: 1.5; }
+    #printReport table { width: 100%; border-collapse: collapse; }
+    #printReport th, #printReport td { border-bottom: 1px solid #ccc; padding: 7pt 6pt; text-align: left; }
+    #printReport th { background: #f0f2f5; font-size: 10pt; text-transform: uppercase; letter-spacing: .04em; }
+    #printReport .n { width: 30pt; color: #666; }
+    #printReport .t { text-align: right; width: 90pt; font-variant-numeric: tabular-nums; }
+    #printReport tfoot td { font-weight: bold; border-top: 2px solid #333; border-bottom: none; }
+    #printReport .footer { margin-top: 24pt; font-size: 9pt; color: #888; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
 </style>
 </head>
 <body>
@@ -201,8 +219,8 @@
   <main id="main"></main>
 </div>
 
-<script src="lib/pdfmake.min.js"></script>
-<script src="lib/vfs_fonts.js"></script>
+<div id="printReport"></div>
+
 <script>
 (() => {
   const STORAGE_KEY = 'taskTimer.v1';
@@ -265,7 +283,6 @@
   function deleteList(list) {
     if (!confirm(`Usunąć listę „${list.name}”? Tej operacji nie można cofnąć.`)) return;
     state.lists = state.lists.filter(l => l.id !== list.id);
-    forgetPdf(list.id);
     if (selectedId === list.id) selectedId = null;
     save(); render();
   }
@@ -319,121 +336,33 @@
   }
 
   // ---------- Eksport do PDF ----------
-  function pdfDefinition(list) {
-    const head = ['#', 'Zadanie', 'Czas'].map((text, i) => ({
-      text, style: 'th', alignment: i === 2 ? 'right' : 'left'
-    }));
-    const body = list.tasks.map((t, i) => [
-      { text: String(i + 1), color: '#666666' },
-      t.name,
-      { text: fmt(elapsed(t)), alignment: 'right' }
-    ]);
-    const foot = [
-      '',
-      { text: 'Łącznie', bold: true },
-      { text: fmt(listTotal(list)), bold: true, alignment: 'right' }
-    ];
-
-    return {
-      pageSize: 'A4',
-      pageMargins: [50, 50, 50, 60],
-      info: { title: `${list.name} - raport czasu` },
-      content: [
-        { text: list.name, style: 'h1' },
-        {
-          style: 'meta',
-          text: [
-            `Utworzono: ${fmtDate(list.createdAt)}\n`,
-            `Zamknięto: ${fmtDate(list.closedAt)}\n`,
-            `Liczba zadań: ${list.tasks.length}`
-          ]
-        },
-        {
-          table: { headerRows: 1, widths: [24, '*', 80], body: [head, ...body, foot] },
-          layout: {
-            fillColor: row => row === 0 ? '#f0f2f5' : null,
-            hLineWidth: (i, node) => i === node.table.body.length - 1 ? 1.5 : (i === 0 ? 0 : 0.5),
-            hLineColor: (i, node) => i === node.table.body.length - 1 ? '#333333' : '#cccccc',
-            vLineWidth: () => 0,
-            paddingTop: () => 6,
-            paddingBottom: () => 6
-          }
-        }
-      ],
-      footer: (page, pages) => ({
-        columns: [
-          { text: `Wygenerowano: ${fmtDate(Date.now())} · Task Timer`, alignment: 'left' },
-          { text: `Strona ${page} / ${pages}`, alignment: 'right' }
-        ],
-        margin: [50, 20, 50, 0],
-        fontSize: 8,
-        color: '#888888'
-      }),
-      styles: {
-        h1: { fontSize: 20, bold: true, margin: [0, 0, 0, 6] },
-        meta: { fontSize: 10, color: '#555555', lineHeight: 1.3, margin: [0, 0, 0, 16] },
-        th: { fontSize: 9, bold: true, color: '#333333' }
-      },
-      defaultStyle: { font: 'Roboto', fontSize: 11 }
-    };
-  }
-
-  // Zamknięta lista już się nie zmienia, więc PDF przygotowujemy z wyprzedzeniem
-  // (przy jej wyświetleniu). Kliknięcie tylko otwiera gotowy plik — generowanie po
-  // otwarciu nowej karty trwało długo, bo przeglądarka spowalnia karty w tle.
-  const pdfJobs = {};   // id listy -> Promise z adresem PDF
-  const pdfUrls = {};   // id listy -> gotowy adres PDF
-
-  function preparePdf(list) {
-    if (!window.pdfMake || !list.closedAt) return null;
-    if (!pdfJobs[list.id]) {
-      pdfJobs[list.id] = new Promise(resolve => {
-        pdfMake.createPdf(pdfDefinition(list)).getBlob(blob => {
-          pdfUrls[list.id] = URL.createObjectURL(blob);
-          resolve(pdfUrls[list.id]);
-        });
-      });
-    }
-    return pdfJobs[list.id];
-  }
-
-  function forgetPdf(id) {
-    if (pdfUrls[id]) URL.revokeObjectURL(pdfUrls[id]);
-    delete pdfUrls[id];
-    delete pdfJobs[id];
-  }
-
-  function downloadPdf(url, list) {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${list.name.replace(/[\\/:*?"<>|]+/g, '_')} - raport czasu.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  }
-
   function exportPdf(list) {
-    if (!window.pdfMake) {
-      alert('Nie udało się załadować biblioteki PDF (folder lib/).');
-      return;
-    }
-    const ready = pdfUrls[list.id];
-    if (ready) {
-      // Karta zablokowana — pobierz plik bezpośrednio.
-      if (!window.open(ready, '_blank')) downloadPdf(ready, list);
-      return;
-    }
-    // PDF jeszcze się tworzy: kartę otwieramy od razu po kliknięciu — otwarta później
-    // zostałaby zablokowana jako wyskakujące okno.
-    const win = window.open('', '_blank');
-    if (win) {
-      win.document.title = 'Generowanie PDF…';
-      win.document.body.innerHTML = '<p style="font-family:sans-serif;padding:20px">Generowanie PDF…</p>';
-    }
-    preparePdf(list).then(url => {
-      if (win && !win.closed) win.location.href = url;
-      else downloadPdf(url, list);
-    });
+    const rows = list.tasks.map((t, i) => `
+      <tr>
+        <td class="n">${i + 1}</td>
+        <td>${esc(t.name)}</td>
+        <td class="t">${fmt(elapsed(t))}</td>
+      </tr>`).join('');
+
+    document.getElementById('printReport').innerHTML = `
+      <h1>${esc(list.name)}</h1>
+      <div class="meta">
+        Utworzono: ${fmtDate(list.createdAt)}<br>
+        Zamknięto: ${fmtDate(list.closedAt)}<br>
+        Liczba zadań: ${list.tasks.length}
+      </div>
+      <table>
+        <thead><tr><th class="n">#</th><th>Zadanie</th><th class="t">Czas</th></tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr><td></td><td>Łącznie</td><td class="t">${fmt(listTotal(list))}</td></tr></tfoot>
+      </table>
+      <div class="footer">Wygenerowano: ${fmtDate(Date.now())} · Task Timer</div>`;
+
+    // Tytuł strony staje się domyślną nazwą pliku przy „Zapisz jako PDF”.
+    const prevTitle = document.title;
+    document.title = `${list.name} - raport czasu`;
+    window.addEventListener('afterprint', () => { document.title = prevTitle; }, { once: true });
+    window.print();
   }
 
   // ---------- Widok ----------
@@ -468,7 +397,6 @@
     const closed = !!list.closedAt;
     const doneCount = list.tasks.filter(t => t.done).length;
     const closable = canClose(list);
-    if (closed) preparePdf(list);
 
     let notice = '';
     if (!closed) {
@@ -484,7 +412,7 @@
         </div>
         <div class="actions">
           ${closed
-            ? `<button class="primary" data-act="pdf">Otwórz PDF</button>
+            ? `<button class="primary" data-act="pdf">Zapisz do PDF</button>
                <button class="danger" data-act="delete-list">Usuń listę</button>`
             : `<button data-act="rename">Zmień nazwę</button>
                <button class="danger" data-act="delete-list">Usuń</button>
