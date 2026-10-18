@@ -9,7 +9,7 @@ Prosta aplikacja w przeglądarce do mierzenia czasu spędzonego nad zadaniami.
 - Start i pauza odliczania czasu dla każdego zadania (w danej liście czas liczy się tylko dla jednego zadania naraz)
 - Oznaczanie zadań jako zakończone
 - Zamykanie listy — możliwe dopiero po zakończeniu wszystkich zadań
-- Podgląd i zapis zamkniętej listy do PDF (z czasami poszczególnych zadań i sumą)
+- Raport zamkniętej listy w PDF (z czasami poszczególnych zadań i sumą), otwierany w przeglądarce — na komputerze i na telefonie
 
 Dane zapisywane są lokalnie w przeglądarce (`localStorage`).
 
