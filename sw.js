@@ -26,7 +26,9 @@ const FILES = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  // cache: 'reload' — pliki prosto z sieci, nie ze starej pamięci HTTP przeglądarki.
+  const requests = FILES.map(f => new Request(f, { cache: 'reload' }));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(requests)).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {

@@ -17,9 +17,25 @@
 
   // Każda akcja użytkownika: zmiana stanu → zapis → nowy widok.
   function act(fn) {
+    const key = focusKey(document.activeElement);
     fn();
     save();
     render();
+    restoreFocus(key);
+  }
+
+  // Widok jest przebudowywany w całości, więc fokus odnajdujemy po atrybutach elementu.
+  function focusKey(el) {
+    if (!el || !el.closest || !el.closest('#app, #dock')) return null;
+    if (el.dataset.act) return `[data-act="${el.dataset.act}"]` + (el.dataset.task ? `[data-task="${el.dataset.task}"]` : '');
+    if (el.dataset.dock) return `[data-dock="${el.dataset.dock}"]`;
+    if (el.matches('a[href]')) return `a[href="${el.getAttribute('href')}"]`;
+    return null;
+  }
+  function restoreFocus(key) {
+    if (!key || (document.activeElement && document.activeElement !== document.body)) return;
+    const el = document.querySelector(`#app ${key}, #dock ${key}`);
+    if (el) el.focus();
   }
 
   const now = () => Date.now();
@@ -117,6 +133,8 @@
     </li>`;
   }
 
+  const ADD_TASK_BUTTON = '<button class="row row-add" data-act="open-add"><span class="plus" aria-hidden="true">+</span>Dodaj zadanie</button>';
+
   function renderList(list) {
     const total = list.tasks.length;
     const done = doneCount(list);
@@ -129,7 +147,7 @@
           <input class="field" name="name" maxlength="200" placeholder="Hydraulika" aria-label="Nazwa zadania" autocomplete="off" enterkeyhint="done">
           <button class="btn btn-main" type="submit">Dodaj</button>
         </form></li>`
-      : `<li><button class="row row-add" data-act="open-add"><span class="plus" aria-hidden="true">+</span>Dodaj zadanie</button></li>`;
+      : `<li>${ADD_TASK_BUTTON}</li>`;
 
     let footer = '';
     if (closed) footer = `<button class="btn btn-main btn-wide" data-act="print">Zapisz do PDF</button>`;
@@ -184,7 +202,9 @@
   let sheet = null; // { actions, opener }
 
   function openSheet({ title, body, actions, input, cancel = true }, opener) {
-    sheet = { actions, opener: opener || sheet?.opener || document.activeElement };
+    const from = opener || sheet?.opener || document.activeElement;
+    sheet = { actions, opener: from, openerKey: sheet?.openerKey || focusKey(from) };
+    setInert(true);
     $sheetRoot.innerHTML = `<div class="sheet-backdrop">
       <form class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
         <h2 class="sheet-title" id="sheet-title">${esc(title)}</h2>
@@ -201,12 +221,19 @@
     if (first.select) first.select();
   }
 
-  function closeSheet(restoreFocus = true) {
+  function closeSheet(refocus = true) {
     if (!sheet) return;
-    const opener = sheet.opener;
+    const { opener, openerKey } = sheet;
     sheet = null;
     $sheetRoot.innerHTML = '';
-    if (restoreFocus && opener && opener.isConnected) opener.focus();
+    setInert(false);
+    if (!refocus) return;
+    if (opener && opener.isConnected) opener.focus();
+    else restoreFocus(openerKey);
+  }
+
+  function setInert(on) {
+    ['app', 'dock', 'warn'].forEach(id => { document.getElementById(id).inert = on; });
   }
 
   function runSheetAction(i) {
@@ -401,7 +428,7 @@
   $app.addEventListener('click', e => {
     const btn = e.target.closest('[data-act]');
     if (!btn) return;
-    if (suppressClick) { suppressClick = false; e.preventDefault(); return; }
+    if (Date.now() < suppressClickUntil) { e.preventDefault(); return; }
     const list = S.findList(state, state.selectedId);
     const taskId = btn.dataset.task;
     switch (btn.dataset.act) {
@@ -421,7 +448,7 @@
   });
 
   // Długie przytrzymanie / prawy klik na zadaniu → menu zadania.
-  let pressTimer = null, pressStart = null, suppressClick = false, lastMenuAt = 0;
+  let pressTimer = null, pressStart = null, suppressClickUntil = 0, lastMenuAt = 0;
   function openTaskMenu(btn) {
     if (Date.now() - lastMenuAt < 700) return;
     lastMenuAt = Date.now();
@@ -432,7 +459,8 @@
     const btn = e.target.closest('[data-act="toggle"]');
     if (!btn || e.button !== 0) return;
     pressStart = { x: e.clientX, y: e.clientY };
-    pressTimer = setTimeout(() => { pressTimer = null; suppressClick = true; openTaskMenu(btn); }, 500);
+    // Klik, który przychodzi zaraz po przytrzymaniu, nie może przełączyć zadania.
+    pressTimer = setTimeout(() => { pressTimer = null; suppressClickUntil = Date.now() + 600; openTaskMenu(btn); }, 500);
   });
   $app.addEventListener('pointermove', e => {
     if (pressTimer && Math.hypot(e.clientX - pressStart.x, e.clientY - pressStart.y) > 10) cancelPress();
@@ -451,7 +479,12 @@
     if (!e.target.matches('[data-form="new-task"] .field') || e.target.value.trim()) return;
     setTimeout(() => {
       if ($app.contains(document.activeElement) && document.activeElement.closest('[data-form="new-task"]')) return;
-      if (ui.addOpen) { ui.addOpen = null; render(); }
+      const li = $app.querySelector('[data-form="new-task"]')?.parentElement;
+      if (!ui.addOpen || !li) return;
+      const list = S.findList(state, ui.addOpen);
+      if (!list || !list.tasks.length) return; // pusta lista: pole zostaje
+      ui.addOpen = null;
+      li.innerHTML = ADD_TASK_BUTTON;
     }, 0);
   });
 
@@ -474,7 +507,8 @@
   }
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
-  window.addEventListener('hashchange', render);
+  // Gest / przycisk „wstecz” zmienia adres — otwarty arkusz dotyczył poprzedniego ekranu.
+  window.addEventListener('hashchange', () => { closeSheet(false); render(); });
   wide.addEventListener('change', render);
   setInterval(tick, 500);
   render();
