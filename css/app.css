@@ -162,6 +162,29 @@ details.closed[open] > summary::after { transform: rotate(180deg); }
 /* Ostrzeżenie o zapisie */
 .warn { padding: 10px var(--pad); background: var(--bg); color: var(--ink-2); font-size: 13px; border-bottom: 1px solid var(--line); }
 
+/* Dok z zegarem */
+#dock { flex: none; background: var(--dock); color: var(--on-dock); }
+.dock-in {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px var(--pad) calc(12px + env(safe-area-inset-bottom));
+}
+.dock-in.is-entering { animation: dock-in var(--ease); }
+@keyframes dock-in { from { transform: translateY(100%); } to { transform: none; } }
+.dock-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.dock-name { display: flex; align-items: center; gap: 6px; color: var(--run); font-size: 14px; font-weight: 500; min-width: 0; }
+.dock-name, .dock-list { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--run); }
+.dock-list { font-size: 13px; color: var(--on-dock); opacity: .7; }
+.dock-clock { font-size: 40px; font-weight: 600; line-height: 1.05; color: var(--on-dock); }
+.dock-btn {
+  flex: none; width: 56px; height: 56px; border: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.dock-pause { background: var(--run); color: #1B2430; }
+.dock-finish { background: var(--done); color: #FFFFFF; }
+.dock-btn:active { transform: scale(.94); }
+#dock :focus-visible { outline-color: var(--on-dock); }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }

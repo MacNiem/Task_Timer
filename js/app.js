@@ -154,6 +154,35 @@
 
   const emit = (name, detail) => document.dispatchEvent(new CustomEvent(name, { detail }));
 
+  // ---------- Dok z zegarem biegnącego zadania ----------
+  const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></svg>';
+  const $dock = document.getElementById('dock');
+
+  function renderDock() {
+    const r = S.running(state);
+    if (!r) { $dock.hidden = true; $dock.innerHTML = ''; return; }
+    const elsewhere = route().view !== 'list' || r.list.id !== state.selectedId;
+    const entering = $dock.hidden;
+    $dock.hidden = false;
+    $dock.innerHTML = `<div class="dock-in${entering ? ' is-entering' : ''}">
+      <a class="dock-info" href="${listHref(r.list.id)}">
+        <span class="dock-name"><span class="dot" aria-hidden="true"></span>${esc(r.task.name)}</span>
+        ${elsewhere ? `<span class="dock-list">${esc(r.list.name)}</span>` : ''}
+        <span class="clock dock-clock" data-time="${r.task.id}">${S.fmt(S.elapsed(r.task, now()))}</span>
+      </a>
+      <button class="dock-btn dock-pause" data-dock="pause" aria-label="Wstrzymaj">${ICON_PAUSE}</button>
+      <button class="dock-btn dock-finish" data-dock="finish" aria-label="Zakończ zadanie">${ICON_CHECK.replace(/16/g, '22')}</button>
+    </div>`;
+  }
+
+  $dock.addEventListener('click', e => {
+    const btn = e.target.closest('[data-dock]');
+    const r = S.running(state);
+    if (!btn || !r) return;
+    if (btn.dataset.dock === 'pause') act(() => S.pauseTask(state, r.list.id, r.task.id, now()));
+    else act(() => S.finishTask(state, r.list.id, r.task.id, now()));
+  });
+
   // ---------- Rysowanie ----------
   const $app = document.getElementById('app');
 
@@ -168,6 +197,7 @@
       if (field) field.focus();
       ui.focusAdd = false;
     }
+    renderDock();
   }
 
   // Liczniki tykają bez przebudowy widoku.
