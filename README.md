@@ -12,6 +12,13 @@ Save a closed list as a PDF. Built for phones and tablets; it also works on desk
 
 The installed app gets its own icon, works offline, and the browser won't clear its data.
 
+### Running on a computer
+
+Open `index.html` in a browser, or double-click `Create-shortcut.cmd`. It creates a **Task Timer**
+shortcut with a stopwatch icon (on the desktop and in this folder) that opens the app in its own
+window without an address bar — in Google Chrome, or in Brave or Edge if Chrome isn't installed.
+After moving the folder, run `Create-shortcut.cmd` again.
+
 ## Features
 
 - Named task lists
@@ -33,31 +40,6 @@ without the author's permission.
 
 The Barlow and Barlow Condensed fonts are licensed under the SIL Open Font License (`fonts/OFL.txt`).
 
-## For the author
-
-### Running on a computer
-
-Open `index.html` in a browser, or double-click `Create-shortcut.cmd`. It creates a **Task Timer**
-shortcut with a stopwatch icon (on the desktop and in this folder) that opens the app in its own
-window without an address bar — in Google Chrome, or in Brave or Edge if Chrome isn't installed.
-After moving the folder, run `Create-shortcut.cmd` again.
-
-### GitHub Pages
-
-Settings → Pages → “Deploy from a branch”, branch `main`, folder `/ (root)`.
-
-### Releasing a new version
-
-After changing the app files, bump the version in `sw.js` (`const CACHE = 'stoper-v3'` and so on)
-so installed copies download the new files.
-
-### Tests
-
-The app logic (`js/store.js`) is tested in `tests/` (Node.js 18+):
-
-```bash
-npm test
-```
 
 ### Files
 
@@ -68,40 +50,3 @@ npm test
 - `sw.js`, `manifest.webmanifest`, `icons/` — PWA (`icons/icon.ico` — Windows shortcut icon)
 - `Create-shortcut.cmd`, `tools/create-shortcut.ps1` — Task Timer desktop shortcut
 - `fonts/` — Barlow and Barlow Condensed fonts
-
----
-
-## Po polsku
-
-**Otwórz aplikację: https://macniem.github.io/Task_Timer/**
-
-Stoper do zadań. Tworzysz listę, dodajesz zadania i jednym stuknięciem mierzysz czas pracy
-nad każdym z nich. Zamkniętą listę zapisujesz do PDF. Aplikacja jest zrobiona z myślą
-o telefonie i tablecie, działa też na komputerze i bez internetu. Interfejs jest po angielsku.
-
-### Zainstaluj na telefonie
-
-- **Android (Chrome):** otwórz adres aplikacji → menu ⋮ → „Zainstaluj aplikację”.
-- **iPhone / iPad (Safari):** otwórz adres aplikacji → przycisk Udostępnij → „Do ekranu początkowego”.
-
-### Funkcje
-
-- Listy zadań z własnymi nazwami
-- Stuknięcie w zadanie uruchamia lub wstrzymuje licznik; naraz biegnie tylko jeden licznik
-- Pasek na dole ekranu z dużym zegarem biegnącego zadania oraz przyciskami Pause i Finish
-- Kółko przy zadaniu kończy je lub wznawia; przytrzymanie zadania otwiera menu (zmiana nazwy, usuwanie)
-- Listę można zamknąć dopiero po zakończeniu wszystkich zadań
-- Zamkniętą listę można zapisać do PDF (czasy zadań i suma) przez okno drukowania
-- Tryb ciemny według ustawień systemu
-- Telefon: osobne ekrany list i zadań; tablet i komputer: listy i zadania obok siebie
-
-Dane zapisują się tylko w Twojej przeglądarce (`localStorage`), osobno na każdym urządzeniu.
-Nic nie jest wysyłane na serwer.
-
-### Prawa autorskie
-
-© 2026 MacNiem. Wszelkie prawa zastrzeżone. Poza prawami, które regulamin GitHuba daje
-do oglądania i forkowania tego repozytorium na GitHubie, nie wolno kopiować, zmieniać,
-rozpowszechniać ani używać tego kodu bez zgody autora.
-
-Czcionki Barlow i Barlow Condensed są na licencji SIL Open Font License (`fonts/OFL.txt`).
