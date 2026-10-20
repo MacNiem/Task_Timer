@@ -1,2 +1,6 @@
 # Raporty PDF pobrane z aplikacji
 *.pdf
+
+# Pliki robocze narzędzi
+.superpowers/
+.claude/
