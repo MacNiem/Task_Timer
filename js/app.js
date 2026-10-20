@@ -79,12 +79,15 @@
     </form>`;
   }
 
+  const LISTS_MENU_BUTTON = '<button class="icon-btn" data-act="lists-menu" aria-label="Backup menu">⋯</button>';
+
   function renderLists() {
     const active = state.lists.filter(l => !l.closedAt);
     const closed = state.lists.filter(l => l.closedAt);
 
     if (!state.lists.length) {
       return `<section class="screen" aria-label="Lists">
+        <div class="head"><div class="head-top"><h1 class="title title-lists">Lists</h1>${LISTS_MENU_BUTTON}</div></div>
         <div class="empty">
           <h2>Start your first list</h2>
           <p>Name a list, add tasks to it and time your work.</p>
@@ -98,7 +101,7 @@
       : `<li><button class="row row-add" data-act="open-new-list"><span class="plus" aria-hidden="true">+</span>New list</button></li>`;
 
     return `<section class="screen" aria-label="Lists">
-      <div class="head"><div class="head-top"><h1 class="title title-lists">Lists</h1></div></div>
+      <div class="head"><div class="head-top"><h1 class="title title-lists">Lists</h1>${LISTS_MENU_BUTTON}</div></div>
       <ul class="rows">${active.map(listRow).join('')}${addRow}</ul>
       ${closed.length ? `<details class="closed"${ui.closedOpen ? ' open' : ''}>
         <summary>Closed (${closed.length})</summary>
@@ -349,6 +352,47 @@
     window.print();
   }
 
+  // ---------- Backup (export / import) ----------
+  const $importFile = document.getElementById('importFile');
+
+  function exportBackupFile() {
+    const name = `task-timer-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    const file = new File([S.exportBackup(state, now())], name, { type: 'application/json' });
+    // Phones: the system share sheet (save to Files / Drive, send by email). Desktop: plain download.
+    const touch = window.matchMedia('(pointer: coarse)').matches;
+    if (touch && navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: 'Task Timer backup' }).catch(() => {});
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  }
+
+  $importFile.addEventListener('change', async () => {
+    const file = $importFile.files[0];
+    $importFile.value = '';
+    if (!file) return;
+    const backup = S.parseBackup(await file.text());
+    if (!backup) {
+      openSheet({ title: "Can't import", body: "This file isn't a Task Timer backup.", cancel: false,
+        actions: [{ label: 'OK', run: () => {} }] });
+      return;
+    }
+    const n = backup.lists.length;
+    openSheet({ title: 'Replace all data?',
+      body: `Your current lists will be deleted and replaced with ${plural(n, 'list', 'lists')} from the backup.`,
+      actions: [{ label: 'Replace data', danger: true, run: () => {
+        act(() => { state.lists = backup.lists; state.selectedId = null; });
+        location.hash = '#/';
+      } }] });
+  });
+
   $dock.addEventListener('click', e => {
     const btn = e.target.closest('[data-dock]');
     const r = S.running(state);
@@ -446,6 +490,10 @@
       case 'close': emit('closelist', { listId: list.id, opener: btn }); break;
       case 'print': emit('printlist', { listId: list.id }); break;
       case 'hide-hint': hideHint(); break;
+      case 'lists-menu': openSheet({ title: 'Backup', actions: [
+        { label: 'Export backup', run: exportBackupFile },
+        { label: 'Import backup', run: () => $importFile.click() }
+      ] }, btn); break;
     }
   });
 

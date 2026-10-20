@@ -58,6 +58,28 @@
     return JSON.stringify(state);
   }
 
+  // ---------- Backup ----------
+  function exportBackup(state, now) {
+    return JSON.stringify({ app: 'task-timer', version: 1, exportedAt: now, lists: state.lists }, null, 2);
+  }
+
+  const isNum = v => typeof v === 'number' && Number.isFinite(v);
+  const isStr = v => typeof v === 'string';
+  const validTask = t => t && isStr(t.id) && isStr(t.name) && isNum(t.elapsedMs) && t.elapsedMs >= 0
+    && (t.runningSince === null || isNum(t.runningSince)) && typeof t.done === 'boolean';
+  const validList = l => l && isStr(l.id) && isStr(l.name) && isNum(l.createdAt)
+    && (l.closedAt === null || isNum(l.closedAt)) && Array.isArray(l.tasks) && l.tasks.every(validTask);
+
+  // Returns the state from a backup file, or null when the text is not a valid Task Timer backup.
+  function parseBackup(text) {
+    let data;
+    try { data = JSON.parse(text); } catch (e) { return null; }
+    if (!data || data.app !== 'task-timer' || !Array.isArray(data.lists) || !data.lists.every(validList)) return null;
+    const state = { lists: data.lists, selectedId: null };
+    migrate(state);
+    return state;
+  }
+
   const findList = (state, listId) => state.lists.find(l => l.id === listId);
   const findTask = (state, listId, taskId) => {
     const list = findList(state, listId);
@@ -151,7 +173,7 @@
   }
 
   const TaskStore = {
-    load, serialize, uid, findList, createList, renameList, deleteList,
+    load, serialize, exportBackup, parseBackup, uid, findList, createList, renameList, deleteList,
     addTask, renameTask, deleteTask, startTask, pauseTask, toggleTask,
     finishTask, reopenTask, remaining, canClose, closeList, running,
     elapsed, listTotal, fmt

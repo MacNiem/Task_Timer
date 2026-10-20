@@ -27,6 +27,7 @@ After moving the folder, run `Create-shortcut.cmd` again.
 - The circle next to a task finishes or reopens it; press and hold a task to rename or delete it
 - A list can be closed only when all its tasks are finished
 - Save a closed list to PDF (task times and total) via the browser's print dialog — “Save as PDF”
+- Backup: export all lists to a file and import them again (⋯ on the Lists screen)
 - Dark mode follows your system setting
 - Phone: separate screens for lists and tasks; tablet and desktop: side by side
 
@@ -42,6 +43,8 @@ Your data stays in your browser (`localStorage`) on each device. Nothing is sent
   camera or location — it is still a web page running in the browser's sandbox, just with its own icon.
 - **Encrypted connection.** GitHub Pages serves the app over HTTPS.
 - **Data can be lost.** Clearing your browser data or uninstalling the app deletes your lists.
+  Export a backup now and then: **⋯ on the Lists screen → Export backup**. Import it with **Import backup**
+  — also on another device.
 - **Desktop shortcut script.** `Create-shortcut.cmd` runs a PowerShell script that only creates a
   shortcut. As with any script from the internet, read it before running it.
 
