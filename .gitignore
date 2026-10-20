@@ -4,3 +4,6 @@
 # Pliki robocze narzędzi
 .superpowers/
 .claude/
+
+# Skróty Windows (zawierają ścieżki z tego komputera)
+*.lnk

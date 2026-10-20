@@ -19,7 +19,10 @@ Dane zapisywane są lokalnie w przeglądarce (`localStorage`), osobno na każdym
 
 ## Uruchomienie
 
-- **Na komputerze:** otwórz `index.html` w przeglądarce.
+- **Na komputerze:** otwórz `index.html` w przeglądarce albo kliknij dwa razy `Utworz-skrot.cmd`.
+  Powstanie skrót **Task Timer** z ikoną stopera (na pulpicie i w tym folderze), który otwiera aplikację
+  w osobnym oknie, bez paska adresu — w Google Chrome, a gdy go nie ma, w Brave albo Edge.
+  Po przeniesieniu folderu uruchom `Utworz-skrot.cmd` ponownie.
 - **Na telefonie i tablecie:** wystaw aplikację przez GitHub Pages (niżej) i otwórz jej adres.
 
 ### GitHub Pages
@@ -54,5 +57,6 @@ npm test
 - `css/app.css` — wygląd, tryb ciemny, wydruk
 - `js/store.js` — stan i logika zadań (bez DOM)
 - `js/app.js` — widoki, zdarzenia, arkusze, dok z zegarem, PDF
-- `sw.js`, `manifest.webmanifest`, `icons/` — PWA
+- `sw.js`, `manifest.webmanifest`, `icons/` — PWA (`icons/icon.ico` — ikona skrótu Windows)
+- `Utworz-skrot.cmd`, `narzedzia/utworz-skrot.ps1` — skrót Task Timer na pulpicie
 - `fonts/` — czcionki Barlow i Barlow Condensed (licencja SIL OFL, `fonts/OFL.txt`)
