@@ -360,6 +360,7 @@
       ui.focusAdd = false;
     }
     renderDock();
+    document.getElementById('warn').hidden = storageOk;
   }
 
   // Liczniki tykają bez przebudowy widoku.
@@ -463,6 +464,15 @@
     if (ui.newListOpen) { ui.newListOpen = false; render(); }
     if (ui.addOpen) { ui.addOpen = null; render(); }
   });
+
+  // Na telefonie karta bywa zamykana bez beforeunload — zapis przy schowaniu strony.
+  document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
+
+  // PWA: praca bez internetu i trwały zapis (bez service workera przy file://).
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
   window.addEventListener('hashchange', render);
   wide.addEventListener('change', render);
