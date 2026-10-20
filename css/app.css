@@ -213,6 +213,24 @@ details.closed[open] > summary::after { transform: rotate(180deg); }
 @keyframes sheet-up { from { transform: translateY(100%); } to { transform: none; } }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 
+/* Tablet i komputer: dwie kolumny */
+@media (min-width: 768px) {
+  #app { width: 100%; max-width: 1100px; margin: 0 auto; border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
+  .col-lists { flex: none; width: 260px; display: flex; background: var(--surface); border-right: 1px solid var(--line); }
+  .col-lists .title-lists { font-size: 17px; }
+  .col-lists .rows { border-top-color: var(--line); }
+  .col-lists .row[aria-current] { background: var(--bg); box-shadow: inset 3px 0 0 var(--ink-2); }
+  .col-lists .row.has-running { background: var(--run-soft); box-shadow: inset 3px 0 0 var(--run); }
+  .col-lists .row .clock { font-size: 16px; }
+  .col-lists .empty { padding-top: 24px; }
+  .col-lists .empty form { flex-direction: column; }
+  .col-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .col-main .title { font-size: 22px; }
+  .dock-clock { font-size: 36px; }
+  .sheet-backdrop { align-items: center; }
+  .sheet { width: 420px; border-radius: 16px; padding-bottom: 12px; animation: fade var(--ease); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }

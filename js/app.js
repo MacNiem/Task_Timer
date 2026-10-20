@@ -47,7 +47,8 @@
     const sub = list.closedAt ? 'Zamknięta'
       : list.tasks.length ? `${doneCount(list)} z ${list.tasks.length} gotowe` : 'Brak zadań';
     const current = wide.matches && list.id === state.selectedId ? ' aria-current="page"' : '';
-    return `<li><a class="row" href="${listHref(list.id)}"${current}>
+    const runningHere = S.running(state)?.list.id === list.id ? ' has-running' : '';
+    return `<li><a class="row${runningHere}" href="${listHref(list.id)}"${current}>
       <span class="row-main"><span class="name">${esc(list.name)}</span><span class="sub">${sub}</span></span>
       <span class="clock" data-total="${list.id}">${S.fmt(S.listTotal(list, now()))}</span>
     </a></li>`;
@@ -163,7 +164,8 @@
   function renderDock() {
     const r = S.running(state);
     if (!r) { $dock.hidden = true; $dock.innerHTML = ''; return; }
-    const elsewhere = route().view !== 'list' || r.list.id !== state.selectedId;
+    const shown = shownList();
+    const elsewhere = !shown || r.list.id !== shown.id;
     const entering = $dock.hidden;
     $dock.hidden = false;
     $dock.innerHTML = `<div class="dock-in${entering ? ' is-entering' : ''}">
@@ -329,12 +331,29 @@
   // ---------- Rysowanie ----------
   const $app = document.getElementById('app');
 
+  // Lista widoczna na ekranie: na telefonie tylko z adresu, na tablecie też ostatnio wybrana.
+  function shownList() {
+    const r = route();
+    if (r.view === 'list') return S.findList(state, r.listId);
+    return wide.matches ? S.findList(state, state.selectedId) || null : null;
+  }
+
   function render() {
     const r = route();
     if (r.view === 'list') state.selectedId = r.listId;
-    const list = r.view === 'list' ? S.findList(state, r.listId) : null;
+    const list = shownList();
     if (ui.addOpen && (!list || ui.addOpen !== list.id)) ui.addOpen = null;
-    $app.innerHTML = list ? renderList(list) : renderLists();
+    if (wide.matches) {
+      // Tablet / komputer: listy po lewej, wybrana lista po prawej, dok w prawej kolumnie.
+      const shown = list;
+      $app.innerHTML = `<div class="col-lists">${renderLists()}</div>
+        <div class="col-main">${shown ? renderList(shown) : `<section class="screen"><div class="empty">
+          <h2>Wybierz listę</h2><p>Stuknij listę po lewej albo utwórz nową.</p></div></section>`}</div>`;
+      $app.querySelector('.col-main').appendChild($dock);
+    } else {
+      $app.innerHTML = list ? renderList(list) : renderLists();
+      if ($dock.parentNode !== document.body) document.body.insertBefore($dock, $sheetRoot);
+    }
     if (ui.newListOpen || ui.focusAdd) {
       const field = $app.querySelector('.row-form .field');
       if (field) field.focus();
