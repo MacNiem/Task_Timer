@@ -1,0 +1,165 @@
+/* ---------- Czcionki (Barlow, licencja OFL — fonts/OFL.txt) ---------- */
+@font-face { font-family: 'Barlow'; font-weight: 400; font-display: swap; src: url(../fonts/barlow-latin-ext-400.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Barlow'; font-weight: 400; font-display: swap; src: url(../fonts/barlow-latin-400.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Barlow'; font-weight: 500; font-display: swap; src: url(../fonts/barlow-latin-ext-500.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Barlow'; font-weight: 500; font-display: swap; src: url(../fonts/barlow-latin-500.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Barlow'; font-weight: 600; font-display: swap; src: url(../fonts/barlow-latin-ext-600.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Barlow'; font-weight: 600; font-display: swap; src: url(../fonts/barlow-latin-600.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Barlow Condensed'; font-weight: 500; font-display: swap; src: url(../fonts/barlow-condensed-latin-ext-500.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Barlow Condensed'; font-weight: 500; font-display: swap; src: url(../fonts/barlow-condensed-latin-500.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Barlow Condensed'; font-weight: 600; font-display: swap; src: url(../fonts/barlow-condensed-latin-ext-600.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Barlow Condensed'; font-weight: 600; font-display: swap; src: url(../fonts/barlow-condensed-latin-600.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
+/* ---------- Tokeny ---------- */
+:root {
+  --bg: #EEF1F4;
+  --surface: #FFFFFF;
+  --line: #DCE1E7;
+  --ink: #1B2430;
+  --ink-2: #5B6676;
+  --run: #F2A900;
+  --run-soft: #FFF6DC;
+  --done: #2E7D5B;
+  --danger: #C2412D;
+  --dock: #1B2430;
+  --on-dock: #FFFFFF;
+  --font: 'Barlow', system-ui, sans-serif;
+  --font-clock: 'Barlow Condensed', 'Barlow', system-ui, sans-serif;
+  --tap: 48px;
+  --row: 56px;
+  --pad: 16px;
+  --ease: 200ms cubic-bezier(.2, .8, .2, 1);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161C24;
+    --surface: #1F2731;
+    --line: #2E3946;
+    --ink: #E8EDF2;
+    --ink-2: #93A0AF;
+    --run-soft: #3A3018;
+    --done: #3FA77A;
+    --danger: #E0614B;
+    --dock: #263040;
+    color-scheme: dark;
+  }
+}
+
+/* ---------- Baza ---------- */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.35;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.clock { font-family: var(--font-clock); font-variant-numeric: tabular-nums; font-weight: 500; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+#app { flex: 1; min-height: 0; display: flex; }
+.screen { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; }
+
+/* Nagłówek ekranu */
+.head { padding: 14px var(--pad) 12px; }
+.head-top { display: flex; align-items: center; min-height: var(--tap); gap: 8px; }
+.back { display: inline-flex; align-items: center; gap: 2px; min-height: var(--tap); padding-right: 12px; color: var(--ink-2); font-size: 15px; }
+.back::before { content: '‹'; font-size: 26px; line-height: 1; margin-top: -3px; }
+.icon-btn {
+  margin-left: auto; width: var(--tap); height: var(--tap); border: 0; border-radius: 50%;
+  background: transparent; color: var(--ink-2); font-size: 22px; line-height: 1; letter-spacing: 1px;
+}
+.icon-btn:active { background: var(--line); }
+.title { margin: 0; font-size: 24px; font-weight: 600; line-height: 1.15; overflow-wrap: anywhere; }
+.title-lists { font-size: 24px; }
+.meta { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-top: 6px; color: var(--ink-2); font-size: 13px; }
+.meta .clock { color: var(--ink); font-size: 18px; }
+.progress { height: 4px; background: var(--line); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+.progress > span { display: block; height: 100%; background: var(--done); border-radius: 2px; }
+.badge { display: inline-block; margin-left: 8px; font-size: 13px; color: var(--ink-2); font-weight: 500; vertical-align: middle; }
+
+/* Wiersze */
+.rows { list-style: none; margin: 0; padding: 0; background: var(--surface); border-top: 1px solid var(--line); }
+.rows > li { border-bottom: 1px solid var(--line); }
+.row {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: var(--row);
+  padding: 8px var(--pad); border: 0; background: transparent; text-align: left;
+}
+.row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.row .name { font-size: 15px; font-weight: 500; overflow-wrap: anywhere; }
+.row .sub { font-size: 13px; color: var(--ink-2); }
+.row .clock { font-size: 20px; color: var(--ink-2); flex: none; }
+.row:active { background: var(--bg); }
+.row-add { color: var(--ink-2); gap: 10px; }
+.row-add .plus { width: 26px; text-align: center; font-size: 22px; line-height: 1; }
+
+/* Pole wpisywania w wierszu */
+.row-form { display: flex; align-items: center; gap: 8px; padding: 4px 8px 4px var(--pad); min-height: var(--row); background: var(--surface); }
+.field {
+  flex: 1; min-width: 0; height: var(--tap); padding: 0 12px; border: 1px solid var(--line);
+  border-radius: 10px; background: var(--bg); font-size: 16px;
+}
+.field:focus { outline: 2px solid var(--ink); outline-offset: -1px; }
+.btn {
+  min-height: var(--tap); padding: 0 18px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--surface); font-weight: 600; font-size: 15px;
+}
+.btn-main { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.btn-done { background: var(--done); border-color: var(--done); color: #fff; }
+.btn-danger { color: var(--danger); }
+.btn-wide { display: block; width: calc(100% - 2 * var(--pad)); margin: 20px var(--pad); }
+
+/* Sekcje */
+.section-title { margin: 20px var(--pad) 8px; font-size: 13px; font-weight: 500; color: var(--ink-2); }
+details.closed > summary {
+  list-style: none; display: flex; align-items: center; min-height: var(--tap);
+  margin: 12px 0 0; padding: 0 var(--pad); font-size: 13px; font-weight: 500; color: var(--ink-2);
+}
+details.closed > summary::-webkit-details-marker { display: none; }
+details.closed > summary::after { content: '▾'; margin-left: 6px; transition: transform var(--ease); }
+details.closed[open] > summary::after { transform: rotate(180deg); }
+
+/* Pusty stan */
+.empty { padding: 48px var(--pad) 24px; }
+.empty h2 { margin: 0 0 6px; font-size: 22px; font-weight: 600; }
+.empty p { margin: 0 0 18px; color: var(--ink-2); }
+.empty form { display: flex; gap: 8px; }
+
+/* Ostrzeżenie o zapisie */
+.warn { padding: 10px var(--pad); background: var(--bg); color: var(--ink-2); font-size: 13px; border-bottom: 1px solid var(--line); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* ---------- Druk (raport PDF) ---------- */
+#printReport { display: none; }
+@media print {
+  @page { size: A4; margin: 18mm; }
+  body { display: block; height: auto; overflow: visible; background: #fff; color: #111; font-size: 12pt; }
+  #app, #dock, #sheet-root { display: none !important; }
+  #printReport { display: block; }
+  #printReport h1 { font-size: 20pt; margin: 0 0 4pt; }
+  #printReport .meta { display: block; color: #555; font-size: 10pt; margin-bottom: 16pt; line-height: 1.5; }
+  #printReport table { width: 100%; border-collapse: collapse; }
+  #printReport th, #printReport td { border-bottom: 1px solid #ccc; padding: 7pt 6pt; text-align: left; }
+  #printReport th { background: #f0f2f5; font-size: 10pt; }
+  #printReport .n { width: 30pt; color: #666; }
+  #printReport .t { text-align: right; width: 90pt; font-family: var(--font-clock); font-variant-numeric: tabular-nums; }
+  #printReport tfoot td { font-weight: 600; border-top: 2px solid #333; border-bottom: none; }
+  #printReport .footer { margin-top: 24pt; font-size: 9pt; color: #888; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
