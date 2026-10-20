@@ -106,6 +106,27 @@ a { color: inherit; text-decoration: none; }
 .row-add { color: var(--ink-2); gap: 10px; }
 .row-add .plus { width: 26px; text-align: center; font-size: 22px; line-height: 1; }
 
+/* Wiersz zadania: kółko (zakończ) + reszta (start / pauza) */
+.task { display: flex; align-items: stretch; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.task .task-main { flex: 1; min-width: 0; padding-left: 4px; touch-action: manipulation; }
+/* Kółko: pole dotyku 56 px, widoczny okrąg 26 px rysowany przez ::before */
+.check {
+  --c-border: var(--ink-2); --c-bg: transparent; --c-ink: var(--surface);
+  position: relative; flex: none; width: calc(var(--pad) + 40px); min-height: var(--row);
+  margin: 0; padding: 0; border: 0; background: transparent;
+  display: flex; align-items: center; color: var(--c-ink);
+}
+.check::before {
+  content: ''; position: absolute; left: var(--pad); top: 50%; width: 26px; height: 26px; margin-top: -13px;
+  border-radius: 50%; border: 2px solid var(--c-border); background: var(--c-bg); box-sizing: border-box;
+}
+.check > svg { position: relative; margin-left: calc(var(--pad) + 13px); transform: translateX(-50%); }
+.is-running { background: var(--run-soft); box-shadow: inset 4px 0 0 var(--run); }
+.is-running .check { --c-border: var(--run); --c-bg: var(--run); --c-ink: #1B2430; }
+.is-running .clock, .is-running .sub { color: var(--ink); }
+.is-done .check { --c-border: var(--done); --c-bg: var(--done); --c-ink: #FFFFFF; }
+.is-done .name { color: var(--ink-2); text-decoration: line-through; }
+
 /* Pole wpisywania w wierszu */
 .row-form { display: flex; align-items: center; gap: 8px; padding: 4px 8px 4px var(--pad); min-height: var(--row); background: var(--surface); }
 .field {
