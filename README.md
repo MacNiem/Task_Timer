@@ -31,8 +31,6 @@ After moving the folder, run `Create-shortcut.cmd` again.
 - Dark mode follows your system setting
 - Phone: separate screens for lists and tasks; tablet and desktop: side by side
 
-Your data stays in your browser (`localStorage`) on each device. Nothing is sent to a server.
-
 ## Privacy and security
 
 - **No tracking, no server.** The app makes no network requests apart from loading its own files.
@@ -55,7 +53,6 @@ to view and fork this repository on GitHub, you may not copy, modify, distribute
 without the author's permission.
 
 The Barlow and Barlow Condensed fonts are licensed under the SIL Open Font License (`fonts/OFL.txt`).
-
 
 ### Files
 
