@@ -148,6 +148,8 @@
         <div class="progress" aria-hidden="true"><span style="width:${total ? (done / total) * 100 : 0}%"></span></div>
       </div>
       <ul class="rows tasks">${list.tasks.map(t => taskRow(list, t)).join('')}${addRow}</ul>
+      ${!closed && total && !hintSeen() ? `<p class="hint">Przytrzymaj zadanie, aby zmienić nazwę lub usunąć.
+        <button class="hint-x" data-act="hide-hint" aria-label="Zamknij podpowiedź">×</button></p>` : ''}
       ${footer}
     </section>`;
   }
@@ -173,6 +175,147 @@
       <button class="dock-btn dock-pause" data-dock="pause" aria-label="Wstrzymaj">${ICON_PAUSE}</button>
       <button class="dock-btn dock-finish" data-dock="finish" aria-label="Zakończ zadanie">${ICON_CHECK.replace(/16/g, '22')}</button>
     </div>`;
+  }
+
+  // ---------- Arkusze (zamiast confirm / prompt) ----------
+  const $sheetRoot = document.getElementById('sheet-root');
+  let sheet = null; // { actions, opener }
+
+  function openSheet({ title, body, actions, input, cancel = true }, opener) {
+    sheet = { actions, opener: opener || sheet?.opener || document.activeElement };
+    $sheetRoot.innerHTML = `<div class="sheet-backdrop">
+      <form class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+        <h2 class="sheet-title" id="sheet-title">${esc(title)}</h2>
+        ${body ? `<p class="sheet-body">${esc(body)}</p>` : ''}
+        ${input ? `<input class="field sheet-field" name="value" value="${esc(input.value)}" maxlength="${input.maxlength || 200}" aria-label="${esc(title)}" autocomplete="off">` : ''}
+        <div class="sheet-actions">
+          ${actions.map((a, i) => `<button class="sheet-btn${a.danger ? ' is-danger' : ''}" type="${input && i === 0 ? 'submit' : 'button'}" data-sheet="${i}">${esc(a.label)}</button>`).join('')}
+          ${cancel ? '<button class="sheet-btn is-cancel" type="button" data-sheet="cancel">Anuluj</button>' : ''}
+        </div>
+      </form>
+    </div>`;
+    const first = $sheetRoot.querySelector('.sheet-field, .sheet-btn');
+    first.focus();
+    if (first.select) first.select();
+  }
+
+  function closeSheet(restoreFocus = true) {
+    if (!sheet) return;
+    const opener = sheet.opener;
+    sheet = null;
+    $sheetRoot.innerHTML = '';
+    if (restoreFocus && opener && opener.isConnected) opener.focus();
+  }
+
+  function runSheetAction(i) {
+    const action = sheet.actions[i];
+    const field = $sheetRoot.querySelector('.sheet-field');
+    const keep = sheet;
+    action.run(field ? field.value : undefined);
+    if (sheet === keep) closeSheet(); // akcja nie otworzyła kolejnego arkusza
+  }
+
+  $sheetRoot.addEventListener('click', e => {
+    if (e.target.classList.contains('sheet-backdrop')) return closeSheet();
+    const btn = e.target.closest('[data-sheet]');
+    if (!btn || btn.type === 'submit') return;
+    if (btn.dataset.sheet === 'cancel') closeSheet();
+    else runSheetAction(Number(btn.dataset.sheet));
+  });
+  $sheetRoot.addEventListener('submit', e => { e.preventDefault(); runSheetAction(0); });
+  $sheetRoot.addEventListener('keydown', e => {
+    if (e.key === 'Escape') return closeSheet();
+    if (e.key !== 'Tab') return;
+    const items = [...$sheetRoot.querySelectorAll('input, button')];
+    const i = items.indexOf(document.activeElement);
+    if (e.shiftKey && i <= 0) { e.preventDefault(); items[items.length - 1].focus(); }
+    else if (!e.shiftKey && i === items.length - 1) { e.preventDefault(); items[0].focus(); }
+  });
+
+  // ---------- Menu listy i zadania ----------
+  function askRenameList(list) {
+    openSheet({ title: 'Zmień nazwę listy', input: { value: list.name, maxlength: 100 },
+      actions: [{ label: 'Zapisz', run: v => act(() => S.renameList(state, list.id, v)) }] });
+  }
+
+  function askCloseList(list, opener) {
+    const left = S.remaining(list);
+    if (!S.canClose(list)) {
+      return openSheet({ title: 'Nie można zamknąć listy', cancel: false,
+        body: list.tasks.length ? `Zakończ najpierw wszystkie zadania (zostało: ${left}).` : 'Dodaj i zakończ co najmniej jedno zadanie.',
+        actions: [{ label: 'OK', run: () => {} }] }, opener);
+    }
+    openSheet({ title: 'Zamknąć listę?', body: `Zamknąć listę „${list.name}”? Potem nie da się jej zmieniać.`,
+      actions: [{ label: 'Zamknij listę', run: () => act(() => S.closeList(state, list.id, now())) }] }, opener);
+  }
+
+  function askDeleteList(list) {
+    openSheet({ title: 'Usunąć listę?', body: `Usunąć listę „${list.name}”? Tego nie da się cofnąć.`,
+      actions: [{ label: 'Usuń listę', danger: true, run: () => {
+        act(() => S.deleteList(state, list.id));
+        location.hash = '#/';
+      } }] });
+  }
+
+  document.addEventListener('listmenu', e => {
+    const list = S.findList(state, e.detail.listId);
+    const actions = list.closedAt
+      ? [{ label: 'Zapisz do PDF', run: () => printList(list) }]
+      : [{ label: 'Zmień nazwę', run: () => askRenameList(list) },
+         { label: 'Zamknij listę', run: () => askCloseList(list) }];
+    actions.push({ label: 'Usuń listę', danger: true, run: () => askDeleteList(list) });
+    openSheet({ title: list.name, actions }, e.detail.opener);
+  });
+
+  document.addEventListener('taskmenu', e => {
+    const list = S.findList(state, e.detail.listId);
+    const task = list && list.tasks.find(t => t.id === e.detail.taskId);
+    if (!task || list.closedAt) return;
+    hideHint();
+    openSheet({ title: task.name, actions: [
+      { label: 'Zmień nazwę', run: () => openSheet({ title: 'Zmień nazwę zadania', input: { value: task.name },
+        actions: [{ label: 'Zapisz', run: v => act(() => S.renameTask(state, list.id, task.id, v)) }] }) },
+      { label: 'Usuń zadanie', danger: true, run: () => openSheet({ title: 'Usunąć zadanie?',
+        body: `Usunąć zadanie „${task.name}”?`,
+        actions: [{ label: 'Usuń zadanie', danger: true, run: () => act(() => S.deleteTask(state, list.id, task.id)) }] }) }
+    ] }, e.detail.opener);
+  });
+
+  document.addEventListener('closelist', e => askCloseList(S.findList(state, e.detail.listId), e.detail.opener));
+  document.addEventListener('printlist', e => printList(S.findList(state, e.detail.listId)));
+
+  // ---------- Podpowiedź o przytrzymaniu ----------
+  const HINT_KEY = 'taskTimer.hintSeen';
+  function hintSeen() {
+    try { return localStorage.getItem(HINT_KEY) === '1'; } catch (e) { return true; }
+  }
+  function hideHint() {
+    if (hintSeen()) return;
+    try { localStorage.setItem(HINT_KEY, '1'); } catch (e) {}
+    const el = $app.querySelector('.hint');
+    if (el) el.remove();
+  }
+
+  // ---------- Raport PDF (okno drukowania) ----------
+  function printList(list) {
+    const t = now();
+    const rows = list.tasks.map((task, i) => `<tr>
+      <td class="n">${i + 1}</td><td>${esc(task.name)}</td><td class="t">${S.fmt(S.elapsed(task, t))}</td></tr>`).join('');
+    const fmtDate = ts => new Date(ts).toLocaleString('pl-PL', { dateStyle: 'medium', timeStyle: 'short' });
+    document.getElementById('printReport').innerHTML = `
+      <h1>${esc(list.name)}</h1>
+      <div class="meta">Utworzono: ${fmtDate(list.createdAt)}<br>Zamknięto: ${fmtDate(list.closedAt)}<br>Liczba zadań: ${list.tasks.length}</div>
+      <table>
+        <thead><tr><th class="n">#</th><th>Zadanie</th><th class="t">Czas</th></tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr><td></td><td>Łącznie</td><td class="t">${S.fmt(S.listTotal(list, t))}</td></tr></tfoot>
+      </table>
+      <div class="footer">Wygenerowano: ${fmtDate(t)}, Task Timer</div>`;
+    // Tytuł strony staje się domyślną nazwą pliku przy „Zapisz jako PDF”.
+    const prevTitle = document.title;
+    document.title = `${list.name} - raport czasu`;
+    window.addEventListener('afterprint', () => { document.title = prevTitle; }, { once: true });
+    window.print();
   }
 
   $dock.addEventListener('click', e => {
@@ -253,6 +396,7 @@
       case 'list-menu': emit('listmenu', { listId: list.id, opener: btn }); break;
       case 'close': emit('closelist', { listId: list.id, opener: btn }); break;
       case 'print': emit('printlist', { listId: list.id }); break;
+      case 'hide-hint': hideHint(); break;
     }
   });
 
