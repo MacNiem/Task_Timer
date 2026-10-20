@@ -1,8 +1,8 @@
 {
   "name": "Task Timer",
-  "short_name": "Stoper",
-  "description": "Mierzenie czasu pracy nad zadaniami.",
-  "lang": "pl",
+  "short_name": "Task Timer",
+  "description": "A stopwatch for your tasks.",
+  "lang": "en",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

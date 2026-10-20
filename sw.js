@@ -1,6 +1,6 @@
-// Service worker: pliki aplikacji z pamięci podręcznej, więc działa bez internetu.
-// Przy każdej zmianie plików aplikacji podnieś wersję w CACHE.
-const CACHE = 'stoper-v1';
+// Service worker: serves the app files from the cache, so the app works offline.
+// Bump the CACHE version whenever the app files change.
+const CACHE = 'stoper-v2';
 const FILES = [
   './',
   'index.html',
@@ -26,7 +26,7 @@ const FILES = [
 ];
 
 self.addEventListener('install', e => {
-  // cache: 'reload' — pliki prosto z sieci, nie ze starej pamięci HTTP przeglądarki.
+  // cache: 'reload' — fetch straight from the network, not from the browser's stale HTTP cache.
   const requests = FILES.map(f => new Request(f, { cache: 'reload' }));
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(requests)).then(() => self.skipWaiting()));
 });

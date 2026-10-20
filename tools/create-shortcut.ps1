@@ -1,14 +1,14 @@
-﻿# Tworzy skrót „Task Timer” na pulpicie i w folderze aplikacji.
-# Skrót otwiera index.html w trybie aplikacji (osobne okno bez paska adresu) w Google Chrome,
-# a gdy go nie ma — w Brave albo Microsoft Edge.
-# Po przeniesieniu folderu aplikacji uruchom ponownie Utworz-skrot.cmd.
+﻿# Creates a "Task Timer" shortcut on the desktop and in the app folder.
+# The shortcut opens index.html in app mode (its own window, no address bar) in Google Chrome,
+# or in Brave or Microsoft Edge when Chrome is not installed.
+# After moving the app folder, run Create-shortcut.cmd again.
 $ErrorActionPreference = 'Stop'
 
 $root  = Split-Path -Parent $PSScriptRoot
 $index = Join-Path $root 'index.html'
 $icon  = Join-Path $root 'icons\icon.ico'
 
-# Przeglądarka: najpierw rejestr (App Paths), potem typowe miejsca instalacji.
+# Browser: registry first (App Paths), then the usual install locations.
 function Find-Browser($exe, $folder) {
   foreach ($key in "HKCU:\Software\Microsoft\Windows\CurrentVersion\App Paths\$exe",
                    "HKLM:\Software\Microsoft\Windows\CurrentVersion\App Paths\$exe") {
@@ -25,10 +25,10 @@ $browser = Find-Browser 'chrome.exe' 'Google\Chrome\Application'
 if (-not $browser) { $browser = Find-Browser 'brave.exe' 'BraveSoftware\Brave-Browser\Application' }
 if (-not $browser) { $browser = Find-Browser 'msedge.exe' 'Microsoft\Edge\Application' }
 if (-not $browser) {
-  Write-Host 'Nie znaleziono Chrome, Brave ani Edge. Zainstaluj jedną z tych przeglądarek i uruchom skrypt ponownie.'
+  Write-Host 'Chrome, Brave or Edge not found. Install one of them and run this script again.'
   exit 1
 }
-Write-Host "Przeglądarka: $browser"
+Write-Host "Browser: $browser"
 
 $url   = ([System.Uri]$index).AbsoluteUri
 $shell = New-Object -ComObject WScript.Shell
@@ -39,7 +39,7 @@ foreach ($dir in [Environment]::GetFolderPath('Desktop'), $root) {
   $lnk.Arguments        = "--app=`"$url`""
   $lnk.IconLocation     = "$icon,0"
   $lnk.WorkingDirectory = $root
-  $lnk.Description      = 'Task Timer - mierzenie czasu zadań'
+  $lnk.Description      = 'Task Timer - a stopwatch for your tasks'
   $lnk.Save()
-  Write-Host "Utworzono skrót: $file"
+  Write-Host "Shortcut created: $file"
 }

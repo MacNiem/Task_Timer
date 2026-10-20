@@ -1,9 +1,9 @@
-// Widoki i zdarzenia aplikacji. Logika i stan: js/store.js (TaskStore).
+// App views and events. Logic and state: js/store.js (TaskStore).
 (() => {
   const S = window.TaskStore;
   const KEY = 'taskTimer.v1';
 
-  // ---------- Stan i zapis ----------
+  // ---------- State and saving ----------
   let storageOk = true;
   const state = (() => {
     try { return S.load(localStorage.getItem(KEY)); }
@@ -15,7 +15,7 @@
     catch (e) { storageOk = false; }
   }
 
-  // Każda akcja użytkownika: zmiana stanu → zapis → nowy widok.
+  // Every user action: change state → save → render.
   function act(fn) {
     const key = focusKey(document.activeElement);
     fn();
@@ -24,7 +24,7 @@
     restoreFocus(key);
   }
 
-  // Widok jest przebudowywany w całości, więc fokus odnajdujemy po atrybutach elementu.
+  // The view is rebuilt from scratch, so focus is found again by the element's attributes.
   function focusKey(el) {
     if (!el || !el.closest || !el.closest('#app, #dock')) return null;
     if (el.dataset.act) return `[data-act="${el.dataset.act}"]` + (el.dataset.task ? `[data-task="${el.dataset.task}"]` : '');
@@ -41,27 +41,29 @@
   const now = () => Date.now();
   const wide = window.matchMedia('(min-width: 768px)');
 
-  // Stan samego widoku (nie zapisywany).
+  // View-only state (not saved).
   const ui = { newListOpen: false };
 
-  // ---------- Pomocnicze ----------
+  // ---------- Helpers ----------
   function esc(str) {
     return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
-  const listHref = id => `#/lista/${encodeURIComponent(id)}`;
+  const listHref = id => `#/list/${encodeURIComponent(id)}`;
   const doneCount = list => list.tasks.length - S.remaining(list);
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
   function route() {
-    const m = location.hash.match(/^#\/lista\/(.+)$/);
+    // #/lista/ is the address from the Polish version — old links still work.
+    const m = location.hash.match(/^#\/lista?\/(.+)$/);
     const listId = m && decodeURIComponent(m[1]);
     if (listId && S.findList(state, listId)) return { view: 'list', listId };
     return { view: 'lists' };
   }
 
-  // ---------- Ekran „Listy” ----------
+  // ---------- "Lists" screen ----------
   function listRow(list) {
-    const sub = list.closedAt ? 'Zamknięta'
-      : list.tasks.length ? `${doneCount(list)} z ${list.tasks.length} gotowe` : 'Brak zadań';
+    const sub = list.closedAt ? 'Closed'
+      : list.tasks.length ? `${doneCount(list)} of ${list.tasks.length} done` : 'No tasks';
     const current = wide.matches && list.id === state.selectedId ? ' aria-current="page"' : '';
     const runningHere = S.running(state)?.list.id === list.id ? ' has-running' : '';
     return `<li><a class="row${runningHere}" href="${listHref(list.id)}"${current}>
@@ -72,7 +74,7 @@
 
   function newListForm(cls, label) {
     return `<form class="${cls}" data-form="new-list">
-      <input class="field" name="name" maxlength="100" placeholder="Remont łazienki" aria-label="Nazwa listy" autocomplete="off" required>
+      <input class="field" name="name" maxlength="100" placeholder="Bathroom renovation" aria-label="List name" autocomplete="off" required>
       <button class="btn btn-main" type="submit">${label}</button>
     </form>`;
   }
@@ -82,38 +84,38 @@
     const closed = state.lists.filter(l => l.closedAt);
 
     if (!state.lists.length) {
-      return `<section class="screen" aria-label="Listy">
+      return `<section class="screen" aria-label="Lists">
         <div class="empty">
-          <h2>Zacznij pierwszą listę</h2>
-          <p>Nazwij listę, potem dodaj do niej zadania i mierz czas.</p>
-          ${newListForm('', 'Utwórz listę')}
+          <h2>Start your first list</h2>
+          <p>Name a list, add tasks to it and time your work.</p>
+          ${newListForm('', 'Create list')}
         </div>
       </section>`;
     }
 
     const addRow = ui.newListOpen
-      ? `<li>${newListForm('row-form', 'Utwórz')}</li>`
-      : `<li><button class="row row-add" data-act="open-new-list"><span class="plus" aria-hidden="true">+</span>Nowa lista</button></li>`;
+      ? `<li>${newListForm('row-form', 'Create')}</li>`
+      : `<li><button class="row row-add" data-act="open-new-list"><span class="plus" aria-hidden="true">+</span>New list</button></li>`;
 
-    return `<section class="screen" aria-label="Listy">
-      <div class="head"><div class="head-top"><h1 class="title title-lists">Listy</h1></div></div>
+    return `<section class="screen" aria-label="Lists">
+      <div class="head"><div class="head-top"><h1 class="title title-lists">Lists</h1></div></div>
       <ul class="rows">${active.map(listRow).join('')}${addRow}</ul>
       ${closed.length ? `<details class="closed"${ui.closedOpen ? ' open' : ''}>
-        <summary>Zamknięte (${closed.length})</summary>
+        <summary>Closed (${closed.length})</summary>
         <ul class="rows">${closed.map(listRow).join('')}</ul>
       </details>` : ''}
     </section>`;
   }
 
-  // ---------- Ekran listy ----------
+  // ---------- List screen ----------
   const ICON_CHECK = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const ICON_PLAY = '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></svg>';
 
   function taskState(task) {
-    if (task.done) return { cls: 'is-done', label: 'Zakończone' };
-    if (task.runningSince != null) return { cls: 'is-running', label: 'Biegnie' };
-    if (task.elapsedMs > 0) return { cls: 'is-paused', label: 'Wstrzymane' };
-    return { cls: '', label: 'Nie zaczęte' };
+    if (task.done) return { cls: 'is-done', label: 'Done' };
+    if (task.runningSince != null) return { cls: 'is-running', label: 'Running' };
+    if (task.elapsedMs > 0) return { cls: 'is-paused', label: 'Paused' };
+    return { cls: '', label: 'Not started' };
   }
 
   function taskRow(list, task) {
@@ -128,12 +130,12 @@
         <div class="row task-main">${info}${time}</div></li>`;
     }
     return `<li class="task ${st.cls}">
-      <button class="check" data-act="check" data-task="${task.id}" aria-label="${task.done ? 'Wznów zadanie' : 'Zakończ zadanie'}">${mark}</button>
+      <button class="check" data-act="check" data-task="${task.id}" aria-label="${task.done ? 'Reopen task' : 'Finish task'}">${mark}</button>
       <button class="row task-main" data-act="toggle" data-task="${task.id}" aria-pressed="${running}">${info}${time}</button>
     </li>`;
   }
 
-  const ADD_TASK_BUTTON = '<button class="row row-add" data-act="open-add"><span class="plus" aria-hidden="true">+</span>Dodaj zadanie</button>';
+  const ADD_TASK_BUTTON = '<button class="row row-add" data-act="open-add"><span class="plus" aria-hidden="true">+</span>Add task</button>';
 
   function renderList(list) {
     const total = list.tasks.length;
@@ -144,38 +146,38 @@
 
     const addRow = closed ? '' : addOpen
       ? `<li><form class="row-form" data-form="new-task">
-          <input class="field" name="name" maxlength="200" placeholder="Hydraulika" aria-label="Nazwa zadania" autocomplete="off" enterkeyhint="done">
-          <button class="btn btn-main" type="submit">Dodaj</button>
+          <input class="field" name="name" maxlength="200" placeholder="Plumbing" aria-label="Task name" autocomplete="off" enterkeyhint="done">
+          <button class="btn btn-main" type="submit">Add</button>
         </form></li>`
       : `<li>${ADD_TASK_BUTTON}</li>`;
 
     let footer = '';
-    if (closed) footer = `<button class="btn btn-main btn-wide" data-act="print">Zapisz do PDF</button>`;
-    else if (S.canClose(list)) footer = `<button class="btn btn-done btn-wide" data-act="close">Zamknij listę</button>`;
+    if (closed) footer = `<button class="btn btn-main btn-wide" data-act="print">Save as PDF</button>`;
+    else if (S.canClose(list)) footer = `<button class="btn btn-done btn-wide" data-act="close">Close list</button>`;
 
     return `<section class="screen" aria-label="${esc(list.name)}">
       <div class="head">
         <div class="head-top">
-          ${wide.matches ? '' : '<a class="back" href="#/">Listy</a>'}
-          <button class="icon-btn" data-act="list-menu" aria-label="Menu listy">⋯</button>
+          ${wide.matches ? '' : '<a class="back" href="#/">Lists</a>'}
+          <button class="icon-btn" data-act="list-menu" aria-label="List menu">⋯</button>
         </div>
-        <h1 class="title">${esc(list.name)}${closed ? '<span class="badge">Zamknięta</span>' : ''}</h1>
+        <h1 class="title">${esc(list.name)}${closed ? '<span class="badge">Closed</span>' : ''}</h1>
         <div class="meta">
-          <span>${empty ? 'Dodaj pierwsze zadanie' : `${done} z ${total} gotowe`}</span>
+          <span>${empty ? 'Add your first task' : `${done} of ${total} done`}</span>
           <span class="clock" data-total="${list.id}">${S.fmt(S.listTotal(list, now()))}</span>
         </div>
         <div class="progress" aria-hidden="true"><span style="width:${total ? (done / total) * 100 : 0}%"></span></div>
       </div>
       <ul class="rows tasks">${list.tasks.map(t => taskRow(list, t)).join('')}${addRow}</ul>
-      ${!closed && total && !hintSeen() ? `<p class="hint">Przytrzymaj zadanie, aby zmienić nazwę lub usunąć.
-        <button class="hint-x" data-act="hide-hint" aria-label="Zamknij podpowiedź">×</button></p>` : ''}
+      ${!closed && total && !hintSeen() ? `<p class="hint">Press and hold a task to rename or delete it.
+        <button class="hint-x" data-act="hide-hint" aria-label="Dismiss tip">×</button></p>` : ''}
       ${footer}
     </section>`;
   }
 
   const emit = (name, detail) => document.dispatchEvent(new CustomEvent(name, { detail }));
 
-  // ---------- Dok z zegarem biegnącego zadania ----------
+  // ---------- Dock with the running task's clock ----------
   const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></svg>';
   const $dock = document.getElementById('dock');
 
@@ -192,14 +194,14 @@
         ${elsewhere ? `<span class="dock-list">${esc(r.list.name)}</span>` : ''}
         <span class="clock dock-clock" data-time="${r.task.id}">${S.fmt(S.elapsed(r.task, now()))}</span>
       </a>
-      <button class="dock-btn dock-pause" data-dock="pause" aria-label="Wstrzymaj">${ICON_PAUSE}</button>
-      <button class="dock-btn dock-finish" data-dock="finish" aria-label="Zakończ zadanie">${ICON_CHECK.replace(/16/g, '22')}</button>
+      <button class="dock-btn dock-pause" data-dock="pause" aria-label="Pause">${ICON_PAUSE}</button>
+      <button class="dock-btn dock-finish" data-dock="finish" aria-label="Finish task">${ICON_CHECK.replace(/16/g, '22')}</button>
     </div>`;
   }
 
-  // ---------- Arkusze (zamiast confirm / prompt) ----------
+  // ---------- Sheets (instead of confirm / prompt) ----------
   const $sheetRoot = document.getElementById('sheet-root');
-  let sheet = null; // { actions, opener }
+  let sheet = null; // { actions, opener, openerKey }
 
   function openSheet({ title, body, actions, input, cancel = true }, opener) {
     const from = opener || sheet?.opener || document.activeElement;
@@ -212,7 +214,7 @@
         ${input ? `<input class="field sheet-field" name="value" value="${esc(input.value)}" maxlength="${input.maxlength || 200}" aria-label="${esc(title)}" autocomplete="off">` : ''}
         <div class="sheet-actions">
           ${actions.map((a, i) => `<button class="sheet-btn${a.danger ? ' is-danger' : ''}" type="${input && i === 0 ? 'submit' : 'button'}" data-sheet="${i}">${esc(a.label)}</button>`).join('')}
-          ${cancel ? '<button class="sheet-btn is-cancel" type="button" data-sheet="cancel">Anuluj</button>' : ''}
+          ${cancel ? '<button class="sheet-btn is-cancel" type="button" data-sheet="cancel">Cancel</button>' : ''}
         </div>
       </form>
     </div>`;
@@ -241,7 +243,7 @@
     const field = $sheetRoot.querySelector('.sheet-field');
     const keep = sheet;
     action.run(field ? field.value : undefined);
-    if (sheet === keep) closeSheet(); // akcja nie otworzyła kolejnego arkusza
+    if (sheet === keep) closeSheet(); // the action did not open another sheet
   }
 
   $sheetRoot.addEventListener('click', e => {
@@ -261,26 +263,26 @@
     else if (!e.shiftKey && i === items.length - 1) { e.preventDefault(); items[0].focus(); }
   });
 
-  // ---------- Menu listy i zadania ----------
+  // ---------- List and task menus ----------
   function askRenameList(list) {
-    openSheet({ title: 'Zmień nazwę listy', input: { value: list.name, maxlength: 100 },
-      actions: [{ label: 'Zapisz', run: v => act(() => S.renameList(state, list.id, v)) }] });
+    openSheet({ title: 'Rename list', input: { value: list.name, maxlength: 100 },
+      actions: [{ label: 'Save', run: v => act(() => S.renameList(state, list.id, v)) }] });
   }
 
   function askCloseList(list, opener) {
     const left = S.remaining(list);
     if (!S.canClose(list)) {
-      return openSheet({ title: 'Nie można zamknąć listy', cancel: false,
-        body: list.tasks.length ? `Zakończ najpierw wszystkie zadania (zostało: ${left}).` : 'Dodaj i zakończ co najmniej jedno zadanie.',
+      return openSheet({ title: "Can't close this list", cancel: false,
+        body: list.tasks.length ? `Finish all tasks first (${plural(left, 'task', 'tasks')} left).` : 'Add and finish at least one task.',
         actions: [{ label: 'OK', run: () => {} }] }, opener);
     }
-    openSheet({ title: 'Zamknąć listę?', body: `Zamknąć listę „${list.name}”? Potem nie da się jej zmieniać.`,
-      actions: [{ label: 'Zamknij listę', run: () => act(() => S.closeList(state, list.id, now())) }] }, opener);
+    openSheet({ title: 'Close list?', body: `Close “${list.name}”? You won't be able to change it afterwards.`,
+      actions: [{ label: 'Close list', run: () => act(() => S.closeList(state, list.id, now())) }] }, opener);
   }
 
   function askDeleteList(list) {
-    openSheet({ title: 'Usunąć listę?', body: `Usunąć listę „${list.name}”? Tego nie da się cofnąć.`,
-      actions: [{ label: 'Usuń listę', danger: true, run: () => {
+    openSheet({ title: 'Delete list?', body: `Delete “${list.name}”? This can't be undone.`,
+      actions: [{ label: 'Delete list', danger: true, run: () => {
         act(() => S.deleteList(state, list.id));
         location.hash = '#/';
       } }] });
@@ -289,10 +291,10 @@
   document.addEventListener('listmenu', e => {
     const list = S.findList(state, e.detail.listId);
     const actions = list.closedAt
-      ? [{ label: 'Zapisz do PDF', run: () => printList(list) }]
-      : [{ label: 'Zmień nazwę', run: () => askRenameList(list) },
-         { label: 'Zamknij listę', run: () => askCloseList(list) }];
-    actions.push({ label: 'Usuń listę', danger: true, run: () => askDeleteList(list) });
+      ? [{ label: 'Save as PDF', run: () => printList(list) }]
+      : [{ label: 'Rename', run: () => askRenameList(list) },
+         { label: 'Close list', run: () => askCloseList(list) }];
+    actions.push({ label: 'Delete list', danger: true, run: () => askDeleteList(list) });
     openSheet({ title: list.name, actions }, e.detail.opener);
   });
 
@@ -302,18 +304,18 @@
     if (!task || list.closedAt) return;
     hideHint();
     openSheet({ title: task.name, actions: [
-      { label: 'Zmień nazwę', run: () => openSheet({ title: 'Zmień nazwę zadania', input: { value: task.name },
-        actions: [{ label: 'Zapisz', run: v => act(() => S.renameTask(state, list.id, task.id, v)) }] }) },
-      { label: 'Usuń zadanie', danger: true, run: () => openSheet({ title: 'Usunąć zadanie?',
-        body: `Usunąć zadanie „${task.name}”?`,
-        actions: [{ label: 'Usuń zadanie', danger: true, run: () => act(() => S.deleteTask(state, list.id, task.id)) }] }) }
+      { label: 'Rename', run: () => openSheet({ title: 'Rename task', input: { value: task.name },
+        actions: [{ label: 'Save', run: v => act(() => S.renameTask(state, list.id, task.id, v)) }] }) },
+      { label: 'Delete task', danger: true, run: () => openSheet({ title: 'Delete task?',
+        body: `Delete “${task.name}”?`,
+        actions: [{ label: 'Delete task', danger: true, run: () => act(() => S.deleteTask(state, list.id, task.id)) }] }) }
     ] }, e.detail.opener);
   });
 
   document.addEventListener('closelist', e => askCloseList(S.findList(state, e.detail.listId), e.detail.opener));
   document.addEventListener('printlist', e => printList(S.findList(state, e.detail.listId)));
 
-  // ---------- Podpowiedź o przytrzymaniu ----------
+  // ---------- Press-and-hold tip ----------
   const HINT_KEY = 'taskTimer.hintSeen';
   function hintSeen() {
     try { return localStorage.getItem(HINT_KEY) === '1'; } catch (e) { return true; }
@@ -325,24 +327,24 @@
     if (el) el.remove();
   }
 
-  // ---------- Raport PDF (okno drukowania) ----------
+  // ---------- PDF report (print dialog) ----------
   function printList(list) {
     const t = now();
     const rows = list.tasks.map((task, i) => `<tr>
       <td class="n">${i + 1}</td><td>${esc(task.name)}</td><td class="t">${S.fmt(S.elapsed(task, t))}</td></tr>`).join('');
-    const fmtDate = ts => new Date(ts).toLocaleString('pl-PL', { dateStyle: 'medium', timeStyle: 'short' });
+    const fmtDate = ts => new Date(ts).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
     document.getElementById('printReport').innerHTML = `
       <h1>${esc(list.name)}</h1>
-      <div class="meta">Utworzono: ${fmtDate(list.createdAt)}<br>Zamknięto: ${fmtDate(list.closedAt)}<br>Liczba zadań: ${list.tasks.length}</div>
+      <div class="meta">Created: ${fmtDate(list.createdAt)}<br>Closed: ${fmtDate(list.closedAt)}<br>Tasks: ${list.tasks.length}</div>
       <table>
-        <thead><tr><th class="n">#</th><th>Zadanie</th><th class="t">Czas</th></tr></thead>
+        <thead><tr><th class="n">#</th><th>Task</th><th class="t">Time</th></tr></thead>
         <tbody>${rows}</tbody>
-        <tfoot><tr><td></td><td>Łącznie</td><td class="t">${S.fmt(S.listTotal(list, t))}</td></tr></tfoot>
+        <tfoot><tr><td></td><td>Total</td><td class="t">${S.fmt(S.listTotal(list, t))}</td></tr></tfoot>
       </table>
-      <div class="footer">Wygenerowano: ${fmtDate(t)}, Task Timer</div>`;
-    // Tytuł strony staje się domyślną nazwą pliku przy „Zapisz jako PDF”.
+      <div class="footer">Generated: ${fmtDate(t)}, Task Timer</div>`;
+    // The page title becomes the default file name in "Save as PDF".
     const prevTitle = document.title;
-    document.title = `${list.name} - raport czasu`;
+    document.title = `${list.name} - time report`;
     window.addEventListener('afterprint', () => { document.title = prevTitle; }, { once: true });
     window.print();
   }
@@ -355,10 +357,10 @@
     else act(() => S.finishTask(state, r.list.id, r.task.id, now()));
   });
 
-  // ---------- Rysowanie ----------
+  // ---------- Rendering ----------
   const $app = document.getElementById('app');
 
-  // Lista widoczna na ekranie: na telefonie tylko z adresu, na tablecie też ostatnio wybrana.
+  // The list on screen: on a phone only from the address, on a tablet also the last selected one.
   function shownList() {
     const r = route();
     if (r.view === 'list') return S.findList(state, r.listId);
@@ -371,11 +373,11 @@
     const list = shownList();
     if (ui.addOpen && (!list || ui.addOpen !== list.id)) ui.addOpen = null;
     if (wide.matches) {
-      // Tablet / komputer: listy po lewej, wybrana lista po prawej, dok w prawej kolumnie.
+      // Tablet / desktop: lists on the left, selected list on the right, dock in the right column.
       const shown = list;
       $app.innerHTML = `<div class="col-lists">${renderLists()}</div>
         <div class="col-main">${shown ? renderList(shown) : `<section class="screen"><div class="empty">
-          <h2>Wybierz listę</h2><p>Stuknij listę po lewej albo utwórz nową.</p></div></section>`}</div>`;
+          <h2>Pick a list</h2><p>Tap a list on the left or create a new one.</p></div></section>`}</div>`;
       $app.querySelector('.col-main').appendChild($dock);
     } else {
       $app.innerHTML = list ? renderList(list) : renderLists();
@@ -390,7 +392,7 @@
     document.getElementById('warn').hidden = storageOk;
   }
 
-  // Liczniki tykają bez przebudowy widoku.
+  // Clocks tick without rebuilding the view.
   function tick() {
     const t = now();
     document.querySelectorAll('[data-time]').forEach(el => {
@@ -404,7 +406,7 @@
     });
   }
 
-  // ---------- Zdarzenia ----------
+  // ---------- Events ----------
   $app.addEventListener('submit', e => {
     const form = e.target.closest('[data-form]');
     if (!form) return;
@@ -447,7 +449,7 @@
     }
   });
 
-  // Długie przytrzymanie / prawy klik na zadaniu → menu zadania.
+  // Press and hold / right-click on a task → task menu.
   let pressTimer = null, pressStart = null, suppressClickUntil = 0, lastMenuAt = 0;
   function openTaskMenu(btn) {
     if (Date.now() - lastMenuAt < 700) return;
@@ -459,7 +461,7 @@
     const btn = e.target.closest('[data-act="toggle"]');
     if (!btn || e.button !== 0) return;
     pressStart = { x: e.clientX, y: e.clientY };
-    // Klik, który przychodzi zaraz po przytrzymaniu, nie może przełączyć zadania.
+    // A click arriving right after a press-and-hold must not toggle the task.
     pressTimer = setTimeout(() => { pressTimer = null; suppressClickUntil = Date.now() + 600; openTaskMenu(btn); }, 500);
   });
   $app.addEventListener('pointermove', e => {
@@ -474,7 +476,7 @@
     openTaskMenu(btn);
   });
 
-  // Puste pole dodawania zamyka się po utracie fokusu (lista z zadaniami).
+  // An empty "add task" field closes when it loses focus (list with tasks).
   $app.addEventListener('focusout', e => {
     if (!e.target.matches('[data-form="new-task"] .field') || e.target.value.trim()) return;
     setTimeout(() => {
@@ -482,7 +484,7 @@
       const li = $app.querySelector('[data-form="new-task"]')?.parentElement;
       if (!ui.addOpen || !li) return;
       const list = S.findList(state, ui.addOpen);
-      if (!list || !list.tasks.length) return; // pusta lista: pole zostaje
+      if (!list || !list.tasks.length) return; // empty list: the field stays
       ui.addOpen = null;
       li.innerHTML = ADD_TASK_BUTTON;
     }, 0);
@@ -498,16 +500,16 @@
     if (ui.addOpen) { ui.addOpen = null; render(); }
   });
 
-  // Na telefonie karta bywa zamykana bez beforeunload — zapis przy schowaniu strony.
+  // Phones often close the tab without beforeunload — save when the page is hidden.
   document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
 
-  // PWA: praca bez internetu i trwały zapis (bez service workera przy file://).
+  // PWA: offline use and persistent storage (no service worker on file://).
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
-  // Gest / przycisk „wstecz” zmienia adres — otwarty arkusz dotyczył poprzedniego ekranu.
+  // The back gesture / button changes the address — an open sheet belonged to the previous screen.
   window.addEventListener('hashchange', () => { closeSheet(false); render(); });
   wide.addEventListener('change', render);
   setInterval(tick, 500);

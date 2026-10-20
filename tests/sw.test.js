@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
-// Uruchamia sw.js w sztucznym środowisku i zwraca to, co trafiło do cache.addAll.
+// Runs sw.js in a fake environment and returns what was passed to cache.addAll.
 async function installedRequests() {
   const handlers = {};
   let added = null;
@@ -21,18 +21,18 @@ async function installedRequests() {
   return added;
 }
 
-test('instalacja service workera pobiera pliki z sieci, nie z pamięci HTTP', async () => {
+test('service worker install fetches files from the network, not the HTTP cache', async () => {
   const reqs = await installedRequests();
   assert.ok(reqs.length > 0);
   for (const r of reqs) {
-    assert.equal(typeof r, 'object', `plik ${r} dodany jako tekst, nie Request`);
+    assert.equal(typeof r, 'object', `file ${r} added as a string, not a Request`);
     assert.equal(r.cache, 'reload');
   }
 });
 
-test('service worker zapisuje wszystkie pliki aplikacji', async () => {
+test('service worker caches all app files', async () => {
   const urls = (await installedRequests()).map(r => (typeof r === 'string' ? r : r.url));
   for (const f of ['./', 'index.html', 'css/app.css', 'js/store.js', 'js/app.js', 'manifest.webmanifest']) {
-    assert.ok(urls.includes(f), `brak ${f}`);
+    assert.ok(urls.includes(f), `missing ${f}`);
   }
 });

@@ -1,5 +1,5 @@
-// Stan aplikacji i logika zadań — bez dostępu do DOM.
-// W przeglądarce: window.TaskStore, w Node: module.exports.
+// App state and task logic — no DOM access.
+// In the browser: window.TaskStore, in Node: module.exports.
 (function (root) {
   const empty = () => ({ lists: [], selectedId: null });
   const isRunning = task => task.runningSince != null;
@@ -35,8 +35,8 @@
     }
   }
 
-  // Starsze dane mogły mieć kilka biegnących zadań naraz (jeden licznik na listę).
-  // Zostaje to, które wystartowało najpóźniej; reszta jest liczona do jego startu.
+  // Older data could have several running tasks at once (one timer per list).
+  // The most recently started one keeps running; the others are counted up to its start.
   function migrate(state) {
     const runningNow = allTasks(state).filter(x => isRunning(x.task));
     if (runningNow.length < 2) return;
@@ -104,7 +104,7 @@
     const list = findList(state, listId);
     const task = findTask(state, listId, taskId);
     if (!task || list.closedAt || task.done) return;
-    // W całej aplikacji odliczanie trwa tylko dla jednego zadania naraz.
+    // Only one task in the whole app can be timed at once.
     allTasks(state).forEach(x => { if (x.task !== task) stop(x.task, now); });
     if (!isRunning(task)) task.runningSince = now;
   }

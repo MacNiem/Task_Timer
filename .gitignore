@@ -1,9 +1,9 @@
-# Raporty PDF pobrane z aplikacji
+# PDF reports saved from the app
 *.pdf
 
-# Pliki robocze narzędzi
+# Tool scratch files
 .superpowers/
 .claude/
 
-# Skróty Windows (zawierają ścieżki z tego komputera)
+# Windows shortcuts (contain paths from this computer)
 *.lnk
