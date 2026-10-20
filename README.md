@@ -27,8 +27,9 @@ Your data stays in your browser (`localStorage`) on each device. Nothing is sent
 
 ## Copyright
 
-© 2026 MacNiem. All rights reserved. The source code is public for viewing only —
-you may not copy, modify or distribute it without the author's permission.
+© 2026 MacNiem. All rights reserved. Apart from the rights GitHub's Terms of Service give
+to view and fork this repository on GitHub, you may not copy, modify, distribute or use this code
+without the author's permission.
 
 The Barlow and Barlow Condensed fonts are licensed under the SIL Open Font License (`fonts/OFL.txt`).
 
@@ -99,7 +100,8 @@ Nic nie jest wysyłane na serwer.
 
 ### Prawa autorskie
 
-© 2026 MacNiem. Wszelkie prawa zastrzeżone. Kod jest publiczny wyłącznie do wglądu —
-bez zgody autora nie wolno go kopiować, zmieniać ani rozpowszechniać.
+© 2026 MacNiem. Wszelkie prawa zastrzeżone. Poza prawami, które regulamin GitHuba daje
+do oglądania i forkowania tego repozytorium na GitHubie, nie wolno kopiować, zmieniać,
+rozpowszechniać ani używać tego kodu bez zgody autora.
 
 Czcionki Barlow i Barlow Condensed są na licencji SIL Open Font License (`fonts/OFL.txt`).
