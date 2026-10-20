@@ -32,6 +32,19 @@ After moving the folder, run `Create-shortcut.cmd` again.
 
 Your data stays in your browser (`localStorage`) on each device. Nothing is sent to a server.
 
+## Privacy and security
+
+- **No tracking, no server.** The app makes no network requests apart from loading its own files.
+  There are no analytics, ads or third-party scripts, and the fonts are served from this repository.
+- **Your data never leaves your device.** Lists and times are stored only in your browser.
+  The author cannot see them.
+- **No special permissions.** Installing the app gives it no access to your files, contacts,
+  camera or location — it is still a web page running in the browser's sandbox, just with its own icon.
+- **Encrypted connection.** GitHub Pages serves the app over HTTPS.
+- **Data can be lost.** Clearing your browser data or uninstalling the app deletes your lists.
+- **Desktop shortcut script.** `Create-shortcut.cmd` runs a PowerShell script that only creates a
+  shortcut. As with any script from the internet, read it before running it.
+
 ## Copyright
 
 © 2026 MacNiem. All rights reserved. Apart from the rights GitHub's Terms of Service give
