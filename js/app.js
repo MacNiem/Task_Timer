@@ -74,7 +74,7 @@
 
   function newListForm(cls, label) {
     return `<form class="${cls}" data-form="new-list">
-      <input class="field" name="name" maxlength="100" placeholder="Bathroom renovation" aria-label="List name" autocomplete="off" required>
+      <input class="field" name="name" maxlength="100" placeholder="e.g. Product Launch" aria-label="List name" autocomplete="off" required>
       <button class="btn btn-main" type="submit">${label}</button>
     </form>`;
   }
@@ -149,7 +149,7 @@
 
     const addRow = closed ? '' : addOpen
       ? `<li><form class="row-form" data-form="new-task">
-          <input class="field" name="name" maxlength="200" placeholder="Plumbing" aria-label="Task name" autocomplete="off" enterkeyhint="done">
+          <input class="field" name="name" maxlength="200" placeholder="e.g. Prepare Presentation" aria-label="Task name" autocomplete="off" enterkeyhint="done">
           <button class="btn btn-main" type="submit">Add</button>
         </form></li>`
       : `<li>${ADD_TASK_BUTTON}</li>`;
