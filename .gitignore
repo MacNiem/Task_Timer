@@ -7,3 +7,6 @@
 
 # Windows shortcuts (contain paths from this computer)
 *.lnk
+
+# Local notes and screenshots
+uwagi/

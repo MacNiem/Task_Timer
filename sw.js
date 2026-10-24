@@ -1,6 +1,6 @@
 // Service worker: serves the app files from the cache, so the app works offline.
 // Bump the CACHE version whenever the app files change.
-const CACHE = 'stoper-v3';
+const CACHE = 'stoper-v4';
 const FILES = [
   './',
   'index.html',

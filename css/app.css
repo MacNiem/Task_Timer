@@ -224,6 +224,7 @@ details.closed[open] > summary::after { transform: rotate(180deg); }
   .col-lists .row .clock { font-size: 16px; }
   .col-lists .empty { padding-top: 24px; }
   .col-lists .empty form { flex-direction: column; }
+  .col-lists .empty .field { flex: none; } /* flex: 1 in a column squashed the field to ~20 px */
   .col-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
   .col-main .title { font-size: 22px; }
   .dock-clock { font-size: 36px; }
