@@ -522,7 +522,7 @@
       case 'close': emit('closelist', { listId: list.id, opener: btn }); break;
       case 'print': emit('printlist', { listId: list.id }); break;
       case 'hide-hint': hideHint(); break;
-      case 'lists-menu': openSheet({ title: 'Menu', actions: [
+      case 'lists-menu': openSheet({ title: 'Menu', body: `Task Timer ${window.APP_VERSION}`, actions: [
         { label: 'Theme', run: askTheme },
         { label: 'Export backup', run: exportBackupFile },
         { label: 'Import backup', run: () => $importFile.click() }

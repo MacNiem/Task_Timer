@@ -32,6 +32,11 @@ After moving the folder, run `Create-shortcut.cmd` again.
 - Theme: Auto (follows your system), Light or Dark — ⋯ on the Lists screen → Theme
 - Phone: separate screens for lists and tasks; tablet and desktop: side by side
 
+## Version
+
+The current version is shown in the app under **⋯ on the Lists screen**. What changed in each version:
+[CHANGELOG.md](CHANGELOG.md).
+
 ## Privacy and security
 
 - **No tracking, no server.** The app makes no network requests apart from loading its own files.

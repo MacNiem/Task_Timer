@@ -1,9 +1,11 @@
 // Service worker: serves the app files from the cache, so the app works offline.
-// Bump the CACHE version whenever the app files change.
-const CACHE = 'stoper-v6';
+// The cache is named after the app version (js/version.js) — bump the version whenever the app files change.
+importScripts('js/version.js');
+const CACHE = `task-timer-${self.APP_VERSION}`;
 const FILES = [
   './',
   'index.html',
+  'js/version.js',
   'css/app.css',
   'js/store.js',
   'js/app.js',
