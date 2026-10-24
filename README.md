@@ -11,6 +11,7 @@ Save a closed list as a PDF. Built for phones and tablets; it also works on desk
 - **iPhone / iPad (Safari):** open the app link → Share → “Add to Home Screen”.
 
 The installed app gets its own icon, works offline, and the browser won't clear its data.
+It updates itself: when a new version has been downloaded, a “New version available — Reload” bar appears.
 
 ### Running on a computer
 

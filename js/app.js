@@ -238,7 +238,7 @@
   }
 
   function setInert(on) {
-    ['app', 'dock', 'warn'].forEach(id => { document.getElementById(id).inert = on; });
+    ['app', 'dock', 'warn', 'update'].forEach(id => { document.getElementById(id).inert = on; });
   }
 
   function runSheetAction(i) {
@@ -586,8 +586,18 @@
 
   // PWA: offline use and persistent storage (no service worker on file://).
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    // A page already controlled by a service worker that gets a new one = a new version was installed.
+    // (On the very first visit there is no controller yet, so no bar.)
+    const hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (hadController) document.getElementById('update').hidden = false;
+    });
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      // Apps left open in the background check for a new version when they come back.
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+    }).catch(() => {});
   }
+  document.getElementById('updateReload').addEventListener('click', () => location.reload());
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
   // The back gesture / button changes the address — an open sheet belonged to the previous screen.

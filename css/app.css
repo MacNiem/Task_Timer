@@ -198,6 +198,14 @@ details.closed[open] > summary::after { transform: rotate(180deg); }
 .dock-btn:active { transform: scale(.94); }
 #dock :focus-visible { outline-color: var(--on-dock); }
 
+/* New version bar */
+.update {
+  flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 8px var(--pad); background: var(--surface); border-top: 1px solid var(--line);
+  font-size: 15px; font-weight: 500;
+}
+.update[hidden] { display: none; }
+
 /* Tip */
 .hint { display: flex; align-items: center; gap: 8px; margin: 12px var(--pad) 0; color: var(--ink-2); font-size: 13px; }
 .hint-x { flex: none; margin-left: auto; width: var(--tap); height: var(--tap); border: 0; background: transparent; color: var(--ink-2); font-size: 20px; }
@@ -254,7 +262,7 @@ details.closed[open] > summary::after { transform: rotate(180deg); }
 @media print {
   @page { size: A4; margin: 18mm; }
   body { display: block; height: auto; overflow: visible; background: #fff; color: #111; font-size: 12pt; }
-  #app, #dock, #sheet-root { display: none !important; }
+  #app, #dock, #sheet-root, #update, #warn { display: none !important; }
   #printReport { display: block; }
   #printReport h1 { font-size: 20pt; margin: 0 0 4pt; }
   #printReport .meta { display: block; color: #555; font-size: 10pt; margin-bottom: 16pt; line-height: 1.5; }
