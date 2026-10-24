@@ -58,6 +58,13 @@
     return JSON.stringify(state);
   }
 
+  // ---------- Theme ----------
+  const themePref = value => (value === 'light' || value === 'dark' ? value : 'auto');
+  const resolveTheme = (pref, systemDark) => {
+    const p = themePref(pref);
+    return p === 'auto' ? (systemDark ? 'dark' : 'light') : p;
+  };
+
   // ---------- Backup ----------
   function exportBackup(state, now) {
     return JSON.stringify({ app: 'task-timer', version: 1, exportedAt: now, lists: state.lists }, null, 2);
@@ -173,7 +180,7 @@
   }
 
   const TaskStore = {
-    load, serialize, exportBackup, parseBackup, uid, findList, createList, renameList, deleteList,
+    load, serialize, exportBackup, parseBackup, themePref, resolveTheme, uid, findList, createList, renameList, deleteList,
     addTask, renameTask, deleteTask, startTask, pauseTask, toggleTask,
     finishTask, reopenTask, remaining, canClose, closeList, running,
     elapsed, listTotal, fmt

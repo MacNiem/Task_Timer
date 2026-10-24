@@ -28,7 +28,7 @@ After moving the folder, run `Create-shortcut.cmd` again.
 - A list can be closed only when all its tasks are finished
 - Save a closed list to PDF (task times and total) via the browser's print dialog — “Save as PDF”
 - Backup: export all lists to a file and import them again (⋯ on the Lists screen)
-- Dark mode follows your system setting
+- Theme: Auto (follows your system), Light or Dark — ⋯ on the Lists screen → Theme
 - Phone: separate screens for lists and tasks; tablet and desktop: side by side
 
 ## Privacy and security

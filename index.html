@@ -14,6 +14,13 @@
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="stylesheet" href="css/app.css">
+<script>
+  // Apply the chosen theme before the first paint, so the screen doesn't flash light.
+  try {
+    var t = localStorage.getItem('taskTimer.theme');
+    if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+  } catch (e) {}
+</script>
 </head>
 <body>
 <div id="warn" class="warn" role="status" hidden>Your data isn't being saved in this browser.</div>

@@ -31,8 +31,9 @@
   --ease: 200ms cubic-bezier(.2, .8, .2, 1);
   color-scheme: light;
 }
+/* Dark theme: from the system (Auto), unless Light was chosen, or chosen as Dark in the app. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #161C24;
     --surface: #1F2731;
     --line: #2E3946;
@@ -44,6 +45,18 @@
     --dock: #263040;
     color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+  --bg: #161C24;
+  --surface: #1F2731;
+  --line: #2E3946;
+  --ink: #E8EDF2;
+  --ink-2: #93A0AF;
+  --run-soft: #3A3018;
+  --done: #3FA77A;
+  --danger: #E0614B;
+  --dock: #263040;
+  color-scheme: dark;
 }
 
 /* ---------- Base ---------- */

@@ -79,7 +79,7 @@
     </form>`;
   }
 
-  const LISTS_MENU_BUTTON = '<button class="icon-btn" data-act="lists-menu" aria-label="Backup menu">⋯</button>';
+  const LISTS_MENU_BUTTON = '<button class="icon-btn" data-act="lists-menu" aria-label="Menu">⋯</button>';
 
   function renderLists() {
     const active = state.lists.filter(l => !l.closedAt);
@@ -352,6 +352,38 @@
     window.print();
   }
 
+  // ---------- Theme (Auto / Light / Dark) ----------
+  const THEME_KEY = 'taskTimer.theme';
+  const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
+  const THEME_COLORS = { light: '#EEF1F4', dark: '#161C24' };
+
+  function themePref() {
+    try { return S.themePref(localStorage.getItem(THEME_KEY)); } catch (e) { return 'auto'; }
+  }
+
+  function applyTheme() {
+    const pref = themePref();
+    if (pref === 'auto') delete document.documentElement.dataset.theme;
+    else document.documentElement.dataset.theme = pref;
+    // The browser / system bar colour: both meta tags get the colour of the theme shown now.
+    const color = THEME_COLORS[S.resolveTheme(pref, systemDark.matches)];
+    document.querySelectorAll('meta[name="theme-color"]').forEach(m => { m.content = color; });
+  }
+
+  function askTheme() {
+    const current = themePref();
+    const option = (value, label) => ({ label: label + (current === value ? ' ✓' : ''), run: () => {
+      try { localStorage.setItem(THEME_KEY, value); } catch (e) {}
+      applyTheme();
+    } });
+    openSheet({ title: 'Theme', actions: [
+      option('auto', 'Auto (system)'), option('light', 'Light'), option('dark', 'Dark')
+    ] });
+  }
+
+  systemDark.addEventListener('change', applyTheme);
+  applyTheme();
+
   // ---------- Backup (export / import) ----------
   const $importFile = document.getElementById('importFile');
 
@@ -490,7 +522,8 @@
       case 'close': emit('closelist', { listId: list.id, opener: btn }); break;
       case 'print': emit('printlist', { listId: list.id }); break;
       case 'hide-hint': hideHint(); break;
-      case 'lists-menu': openSheet({ title: 'Backup', actions: [
+      case 'lists-menu': openSheet({ title: 'Menu', actions: [
+        { label: 'Theme', run: askTheme },
         { label: 'Export backup', run: exportBackupFile },
         { label: 'Import backup', run: () => $importFile.click() }
       ] }, btn); break;
