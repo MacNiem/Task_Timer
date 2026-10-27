@@ -3,6 +3,16 @@
 Version numbers follow MAJOR.MINOR.PATCH: a big change, new features, fixes.
 The version is set in `js/version.js` and shown in the app under ⋯ on the Lists screen.
 
+## 2.4.0 — 2026-10-27
+
+- Polish interface and PDF reports
+- Refreshed task cards, a labeled total and clearer progress
+- Separate start/pause and completion controls, visible task menus
+- Persistent paused timer with Resume, including after reloading
+- Undo the last deleted task or list; reopen archived lists
+- Protect timer values when the system clock moves backwards
+- Validate saved data before loading
+
 ## 2.3.0 — 2026-10-24
 
 - Theme switch: Auto (follows the system), Light or Dark — ⋯ → Theme

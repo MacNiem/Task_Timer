@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="pl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -23,13 +23,14 @@
 </script>
 </head>
 <body>
-<div id="warn" class="warn" role="status" hidden>Your data isn't being saved in this browser.</div>
+<div id="warn" class="warn" role="status" hidden>Nie można zapisać danych w tej przeglądarce. Wyeksportuj kopię zapasową.</div>
 <div id="app"></div>
 <div id="update" class="update" role="status" hidden>
-  <span>New version available</span>
-  <button class="btn btn-main" type="button" id="updateReload">Reload</button>
+  <span>Dostępna jest nowa wersja</span>
+  <button class="btn btn-main" type="button" id="updateReload">Odśwież</button>
 </div>
 <div id="dock" hidden></div>
+<div id="toast" class="toast" role="status" hidden></div>
 <div id="sheet-root"></div>
 <div id="printReport"></div>
 <input type="file" id="importFile" accept="application/json,.json" hidden>

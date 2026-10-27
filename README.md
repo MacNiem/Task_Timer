@@ -23,13 +23,15 @@ After moving the folder, run `Create-shortcut.cmd` again.
 ## Features
 
 - Named task lists
-- Tap a task to start or pause its timer; only one timer runs at a time
-- A bar at the bottom with a large clock for the running task, plus Pause and Finish buttons
-- The circle next to a task finishes or reopens it; press and hold a task to rename or delete it
+- Polish interface, with task cards and a labeled total time and progress
+- Separate play/pause buttons for each task; only one timer runs at a time
+- A bottom bar with the clock, Pause / Resume and Finish; paused timers remain available after reload
+- The checkbox next to a task finishes or reopens it; its visible ⋯ menu allows renaming or deletion
+- Undo the last deleted task or list using “Cofnij” (available until another deletion or page reload)
 - A list can be closed only when all its tasks are finished
-- Save a closed list to PDF (task times and total) via the browser's print dialog — “Save as PDF”
-- Backup: export all lists to a file and import them again (⋯ on the Lists screen)
-- Theme: Auto (follows your system), Light or Dark — ⋯ on the Lists screen → Theme
+- Save a closed list to PDF (task times and total) via “Zapisz jako PDF”; reopen it from its ⋯ menu
+- Backup: export all lists to a file and import them again (⋯ on “Moje listy”)
+- Theme: Auto (follows your system), Light or Dark — ⋯ on “Moje listy” → “Motyw”
 - Phone: separate screens for lists and tasks; tablet and desktop: side by side
 
 ## Version

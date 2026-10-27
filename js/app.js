@@ -43,6 +43,35 @@
 
   // View-only state (not saved).
   const ui = { newListOpen: false };
+  let pausedRef = state.pausedTask || null;
+  let undoAction = null;
+  const $toast = document.getElementById('toast');
+  function offerUndo(message, restore) {
+    undoAction = restore;
+    $toast.hidden = false;
+    $toast.innerHTML = '<span></span><button type="button">Cofnij</button>';
+    $toast.querySelector('span').textContent = message;
+  }
+  $toast.addEventListener('click', e => {
+    if (!e.target.closest('button') || !undoAction) return;
+    const restore = undoAction;
+    undoAction = null;
+    $toast.hidden = true;
+    act(restore);
+  });
+  function pauseTimer(listId, taskId) {
+    pausedRef = { listId, taskId };
+    state.pausedTask = pausedRef;
+    S.pauseTask(state, listId, taskId, now());
+  }
+  function dockTask() {
+    const running = S.running(state);
+    if (running) return running;
+    if (!pausedRef) return null;
+    const list = S.findList(state, pausedRef.listId);
+    const task = list?.tasks.find(t => t.id === pausedRef.taskId);
+    return list && !list.closedAt && task && !task.done ? {list, task} : null;
+  }
 
   // ---------- Helpers ----------
   function esc(str) {
@@ -60,10 +89,10 @@
     return { view: 'lists' };
   }
 
-  // ---------- "Lists" screen ----------
+  // ---------- "Moje listy" screen ----------
   function listRow(list) {
-    const sub = list.closedAt ? 'Closed'
-      : list.tasks.length ? `${doneCount(list)} of ${list.tasks.length} done` : 'No tasks';
+    const sub = list.closedAt ? 'Zamknięta'
+      : list.tasks.length ? `${doneCount(list)} z ${list.tasks.length} ukończone` : 'Brak zadań';
     const current = wide.matches && list.id === state.selectedId ? ' aria-current="page"' : '';
     const runningHere = S.running(state)?.list.id === list.id ? ' has-running' : '';
     return `<li><a class="row${runningHere}" href="${listHref(list.id)}"${current}>
@@ -74,7 +103,7 @@
 
   function newListForm(cls, label) {
     return `<form class="${cls}" data-form="new-list">
-      <input class="field" name="name" maxlength="100" placeholder="e.g. Product Launch" aria-label="List name" autocomplete="off" required>
+      <input class="field" name="name" maxlength="100" placeholder="np. Projekt strony" aria-label="Nazwa listy" autocomplete="off" required>
       <button class="btn btn-main" type="submit">${label}</button>
     </form>`;
   }
@@ -86,25 +115,25 @@
     const closed = state.lists.filter(l => l.closedAt);
 
     if (!state.lists.length) {
-      return `<section class="screen" aria-label="Lists">
-        <div class="head"><div class="head-top"><h1 class="title title-lists">Lists</h1>${LISTS_MENU_BUTTON}</div></div>
+      return `<section class="screen" aria-label="Moje listy">
+        <div class="head"><div class="head-top"><div><div class="brand"><img src="icons/icon.svg" alt="" width="28" height="28">Task Timer</div><h1 class="title title-lists">Moje listy</h1></div>${LISTS_MENU_BUTTON}</div></div>
         <div class="empty">
-          <h2>Start your first list</h2>
-          <p>Name a list, add tasks to it and time your work.</p>
-          ${newListForm('', 'Create list')}
+          <h2>Utwórz pierwszą listę</h2>
+          <p>Nadaj liście nazwę, dodaj zadania i mierz czas pracy.</p>
+          ${newListForm('', 'Utwórz listę')}
         </div>
       </section>`;
     }
 
     const addRow = ui.newListOpen
-      ? `<li>${newListForm('row-form', 'Create')}</li>`
-      : `<li><button class="row row-add" data-act="open-new-list"><span class="plus" aria-hidden="true">+</span>New list</button></li>`;
+      ? `<li>${newListForm('row-form', 'Utwórz')}</li>`
+      : `<li><button class="row row-add" data-act="open-new-list"><span class="plus" aria-hidden="true">+</span>Nowa lista</button></li>`;
 
-    return `<section class="screen" aria-label="Lists">
-      <div class="head"><div class="head-top"><h1 class="title title-lists">Lists</h1>${LISTS_MENU_BUTTON}</div></div>
+    return `<section class="screen" aria-label="Moje listy">
+      <div class="head"><div class="head-top"><div><div class="brand"><img src="icons/icon.svg" alt="" width="28" height="28">Task Timer</div><h1 class="title title-lists">Moje listy</h1></div>${LISTS_MENU_BUTTON}</div></div>
       <ul class="rows">${active.map(listRow).join('')}${addRow}</ul>
       ${closed.length ? `<details class="closed"${ui.closedOpen ? ' open' : ''}>
-        <summary>Closed (${closed.length})</summary>
+        <summary>Archiwum (${closed.length})</summary>
         <ul class="rows">${closed.map(listRow).join('')}</ul>
       </details>` : ''}
     </section>`;
@@ -115,30 +144,27 @@
   const ICON_PLAY = '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></svg>';
 
   function taskState(task) {
-    if (task.done) return { cls: 'is-done', label: 'Done' };
-    if (task.runningSince != null) return { cls: 'is-running', label: 'Running' };
-    if (task.elapsedMs > 0) return { cls: 'is-paused', label: 'Paused' };
-    return { cls: '', label: 'Not started' };
+    if (task.done) return { cls: 'is-done', label: 'Ukończone' };
+    if (task.runningSince != null) return { cls: 'is-running', label: 'W trakcie' };
+    if (task.elapsedMs > 0) return { cls: 'is-paused', label: 'Wstrzymane' };
+    return { cls: '', label: 'Do rozpoczęcia' };
   }
 
   function taskRow(list, task) {
     const st = taskState(task);
     const running = task.runningSince != null;
-    const time = `<span class="clock" data-time="${task.id}">${S.fmt(S.elapsed(task, now()))}</span>`;
-    const info = `<span class="row-main"><span class="name">${esc(task.name)}</span><span class="sub">${st.label}</span></span>`;
-    const mark = task.done ? ICON_CHECK : running ? ICON_PLAY : '';
-
-    if (list.closedAt) {
-      return `<li class="task ${st.cls}"><span class="check" aria-hidden="true">${mark}</span>
-        <div class="row task-main">${info}${time}</div></li>`;
-    }
-    return `<li class="task ${st.cls}">
-      <button class="check" data-act="check" data-task="${task.id}" aria-label="${task.done ? 'Reopen task' : 'Finish task'}">${mark}</button>
-      <button class="row task-main" data-act="toggle" data-task="${task.id}" aria-pressed="${running}">${info}${time}</button>
-    </li>`;
+    const info = '<div class="row-main"><span class="name">' + esc(task.name) + '</span><span class="sub">' + st.label + '</span></div>';
+    const time = '<span class="clock" data-time="' + task.id + '">' + S.fmt(S.elapsed(task, now())) + '</span>';
+    const mark = task.done ? ICON_CHECK : '';
+    if (list.closedAt) return '<li class="task ' + st.cls + '"><span class="check" aria-hidden="true">' + mark + '</span><div class="row task-main">' + info + time + '</div></li>';
+    return '<li class="task ' + st.cls + '">' +
+      '<button class="check" data-act="check" data-task="' + task.id + '" aria-label="' + (task.done ? 'Otwórz ponownie: ' : 'Zakończ: ') + esc(task.name) + '">' + mark + '</button>' +
+      '<div class="row task-main">' + info + time + '</div>' +
+      (!task.done ? '<button class="task-control' + (running ? ' active' : '') + '" data-act="toggle" data-task="' + task.id + '" aria-label="' + (running ? 'Pauza: ' : 'Uruchom: ') + esc(task.name) + '">' + (running ? ICON_PAUSE : ICON_PLAY) + '</button>' : '') +
+      '<button class="icon-btn task-menu" data-act="task-menu" data-task="' + task.id + '" aria-label="Menu zadania: ' + esc(task.name) + '">⋯</button></li>';
   }
 
-  const ADD_TASK_BUTTON = '<button class="row row-add" data-act="open-add"><span class="plus" aria-hidden="true">+</span>Add task</button>';
+  const ADD_TASK_BUTTON = '<button class="row row-add" data-act="open-add"><span class="plus" aria-hidden="true">+</span>Dodaj zadanie</button>';
 
   function renderList(list) {
     const total = list.tasks.length;
@@ -149,31 +175,30 @@
 
     const addRow = closed ? '' : addOpen
       ? `<li><form class="row-form" data-form="new-task">
-          <input class="field" name="name" maxlength="200" placeholder="e.g. Prepare Presentation" aria-label="Task name" autocomplete="off" enterkeyhint="done">
-          <button class="btn btn-main" type="submit">Add</button>
+          <input class="field" name="name" maxlength="200" placeholder="np. Przygotowanie projektu" aria-label="Nazwa zadania" autocomplete="off" enterkeyhint="done">
+          <button class="btn btn-main" type="submit">Dodaj</button>
         </form></li>`
       : `<li>${ADD_TASK_BUTTON}</li>`;
 
     let footer = '';
-    if (closed) footer = `<button class="btn btn-main btn-wide" data-act="print">Save as PDF</button>`;
-    else if (S.canClose(list)) footer = `<button class="btn btn-done btn-wide" data-act="close">Close list</button>`;
+    if (closed) footer = `<button class="btn btn-main btn-wide" data-act="print">Zapisz jako PDF</button>`;
+    else if (S.canClose(list)) footer = `<button class="btn btn-done btn-wide" data-act="close">Zamknij listę</button>`;
 
     return `<section class="screen" aria-label="${esc(list.name)}">
       <div class="head">
         <div class="head-top">
-          ${wide.matches ? '' : '<a class="back" href="#/">Lists</a>'}
-          <button class="icon-btn" data-act="list-menu" aria-label="List menu">⋯</button>
+          ${wide.matches ? '' : '<a class="back" href="#/">Moje listy</a>'}
+          <button class="icon-btn" data-act="list-menu" aria-label="Menu listy">⋯</button>
         </div>
-        <h1 class="title">${esc(list.name)}${closed ? '<span class="badge">Closed</span>' : ''}</h1>
-        <div class="meta">
-          <span>${empty ? 'Add your first task' : `${done} of ${total} done`}</span>
-          <span class="clock" data-total="${list.id}">${S.fmt(S.listTotal(list, now()))}</span>
+        <h1 class="title">${esc(list.name)}${closed ? '<span class="badge">Zamknięta</span>' : ''}</h1>
+        <div class="summary-card"><div class="total"><span>Łączny czas</span><span class="clock" data-total="${list.id}">${S.fmt(S.listTotal(list, now()))}</span></div><div class="summary-progress"><div class="meta">
+          <span>${empty ? 'Dodaj pierwsze zadanie' : `${done} z ${total} ukończone`}</span>
         </div>
-        <div class="progress" aria-hidden="true"><span style="width:${total ? (done / total) * 100 : 0}%"></span></div>
+        <div class="progress" role="progressbar" aria-label="Postęp zadań" aria-valuemin="0" aria-valuemax="${total || 1}" aria-valuenow="${done}"><span style="width:${total ? (done / total) * 100 : 0}%"></span></div></div></div>
       </div>
       <ul class="rows tasks">${list.tasks.map(t => taskRow(list, t)).join('')}${addRow}</ul>
-      ${!closed && total && !hintSeen() ? `<p class="hint">Press and hold a task to rename or delete it.
-        <button class="hint-x" data-act="hide-hint" aria-label="Dismiss tip">×</button></p>` : ''}
+      ${!closed && total && !hintSeen() ? `<p class="hint">Menu ⋯ przy zadaniu pozwala zmienić nazwę lub je usunąć.
+        <button class="hint-x" data-act="hide-hint" aria-label="Ukryj wskazówkę">×</button></p>` : ''}
       ${footer}
     </section>`;
   }
@@ -185,21 +210,15 @@
   const $dock = document.getElementById('dock');
 
   function renderDock() {
-    const r = S.running(state);
+    const r = dockTask();
     if (!r) { $dock.hidden = true; $dock.innerHTML = ''; return; }
-    const shown = shownList();
-    const elsewhere = !shown || r.list.id !== shown.id;
-    const entering = $dock.hidden;
+    const running = r.task.runningSince != null;
     $dock.hidden = false;
-    $dock.innerHTML = `<div class="dock-in${entering ? ' is-entering' : ''}">
-      <a class="dock-info" href="${listHref(r.list.id)}">
-        <span class="dock-name"><span class="dot" aria-hidden="true"></span>${esc(r.task.name)}</span>
-        ${elsewhere ? `<span class="dock-list">${esc(r.list.name)}</span>` : ''}
-        <span class="clock dock-clock" data-time="${r.task.id}">${S.fmt(S.elapsed(r.task, now()))}</span>
-      </a>
-      <button class="dock-btn dock-pause" data-dock="pause" aria-label="Pause">${ICON_PAUSE}</button>
-      <button class="dock-btn dock-finish" data-dock="finish" aria-label="Finish task">${ICON_CHECK.replace(/16/g, '22')}</button>
-    </div>`;
+    $dock.innerHTML = '<div class="dock-in' + (running ? '' : ' is-paused') + '">' +
+      '<a class="dock-info" href="' + listHref(r.list.id) + '"><span class="dock-name">' + esc(r.task.name) + '</span><span class="dock-list">' + (running ? 'W trakcie' : 'Wstrzymano') + ' · ' + esc(r.list.name) + '</span></a>' +
+      '<span class="clock dock-clock" data-time="' + r.task.id + '">' + S.fmt(S.elapsed(r.task, now())) + '</span>' +
+      '<button class="dock-btn dock-pause" data-dock="' + (running ? 'pause' : 'resume') + '">' + (running ? ICON_PAUSE : ICON_PLAY) + '<span>' + (running ? 'Pauza' : 'Wznów') + '</span></button>' +
+      '<button class="dock-btn dock-finish" data-dock="finish">' + ICON_CHECK + '<span>Zakończ</span></button></div>';
   }
 
   // ---------- Sheets (instead of confirm / prompt) ----------
@@ -217,7 +236,7 @@
         ${input ? `<input class="field sheet-field" name="value" value="${esc(input.value)}" maxlength="${input.maxlength || 200}" aria-label="${esc(title)}" autocomplete="off">` : ''}
         <div class="sheet-actions">
           ${actions.map((a, i) => `<button class="sheet-btn${a.danger ? ' is-danger' : ''}" type="${input && i === 0 ? 'submit' : 'button'}" data-sheet="${i}">${esc(a.label)}</button>`).join('')}
-          ${cancel ? '<button class="sheet-btn is-cancel" type="button" data-sheet="cancel">Cancel</button>' : ''}
+          ${cancel ? '<button class="sheet-btn is-cancel" type="button" data-sheet="cancel">Anuluj</button>' : ''}
         </div>
       </form>
     </div>`;
@@ -238,7 +257,7 @@
   }
 
   function setInert(on) {
-    ['app', 'dock', 'warn', 'update'].forEach(id => { document.getElementById(id).inert = on; });
+    ['app', 'dock', 'warn', 'update', 'toast'].forEach(id => { document.getElementById(id).inert = on; });
   }
 
   function runSheetAction(i) {
@@ -268,25 +287,28 @@
 
   // ---------- List and task menus ----------
   function askRenameList(list) {
-    openSheet({ title: 'Rename list', input: { value: list.name, maxlength: 100 },
-      actions: [{ label: 'Save', run: v => act(() => S.renameList(state, list.id, v)) }] });
+    openSheet({ title: 'Zmień nazwę listy', input: { value: list.name, maxlength: 100 },
+      actions: [{ label: 'Zapisz', run: v => act(() => S.renameList(state, list.id, v)) }] });
   }
 
   function askCloseList(list, opener) {
     const left = S.remaining(list);
     if (!S.canClose(list)) {
-      return openSheet({ title: "Can't close this list", cancel: false,
-        body: list.tasks.length ? `Finish all tasks first (${plural(left, 'task', 'tasks')} left).` : 'Add and finish at least one task.',
+      return openSheet({ title: 'Nie można zamknąć listy', cancel: false,
+        body: list.tasks.length ? `Najpierw ukończ wszystkie zadania. Pozostało: ${left}.` : 'Dodaj i ukończ co najmniej jedno zadanie.',
         actions: [{ label: 'OK', run: () => {} }] }, opener);
     }
-    openSheet({ title: 'Close list?', body: `Close “${list.name}”? You won't be able to change it afterwards.`,
-      actions: [{ label: 'Close list', run: () => act(() => S.closeList(state, list.id, now())) }] }, opener);
+    openSheet({ title: 'Zamknąć listę?', body: `Zamknąć „${list.name}” i przenieść do archiwum? Listę można później otworzyć ponownie.`,
+      actions: [{ label: 'Zamknij listę', run: () => act(() => S.closeList(state, list.id, now())) }] }, opener);
   }
 
   function askDeleteList(list) {
-    openSheet({ title: 'Delete list?', body: `Delete “${list.name}”? This can't be undone.`,
-      actions: [{ label: 'Delete list', danger: true, run: () => {
+    openSheet({ title: 'Usunąć listę?', body: `Usunąć „${list.name}”? Po usunięciu możesz skorzystać z przycisku Cofnij.`,
+      actions: [{ label: 'Usuń listę', danger: true, run: () => {
+        const index = state.lists.indexOf(list);
+        list.tasks.forEach(task => S.pauseTask(state, list.id, task.id, now()));
         act(() => S.deleteList(state, list.id));
+        offerUndo('Lista usunięta', () => { state.lists.splice(index, 0, list); state.selectedId = list.id; });
         location.hash = '#/';
       } }] });
   }
@@ -294,10 +316,10 @@
   document.addEventListener('listmenu', e => {
     const list = S.findList(state, e.detail.listId);
     const actions = list.closedAt
-      ? [{ label: 'Save as PDF', run: () => printList(list) }]
-      : [{ label: 'Rename', run: () => askRenameList(list) },
-         { label: 'Close list', run: () => askCloseList(list) }];
-    actions.push({ label: 'Delete list', danger: true, run: () => askDeleteList(list) });
+      ? [{ label: 'Zapisz jako PDF', run: () => printList(list) }, { label: 'Otwórz ponownie listę', run: () => act(() => { list.closedAt = null; }) }]
+      : [{ label: 'Zmień nazwę', run: () => askRenameList(list) },
+         { label: 'Zamknij listę', run: () => askCloseList(list) }];
+    actions.push({ label: 'Usuń listę', danger: true, run: () => askDeleteList(list) });
     openSheet({ title: list.name, actions }, e.detail.opener);
   });
 
@@ -307,11 +329,19 @@
     if (!task || list.closedAt) return;
     hideHint();
     openSheet({ title: task.name, actions: [
-      { label: 'Rename', run: () => openSheet({ title: 'Rename task', input: { value: task.name },
-        actions: [{ label: 'Save', run: v => act(() => S.renameTask(state, list.id, task.id, v)) }] }) },
-      { label: 'Delete task', danger: true, run: () => openSheet({ title: 'Delete task?',
-        body: `Delete “${task.name}”?`,
-        actions: [{ label: 'Delete task', danger: true, run: () => act(() => S.deleteTask(state, list.id, task.id)) }] }) }
+      { label: 'Zmień nazwę', run: () => openSheet({ title: 'Zmień nazwę zadania', input: { value: task.name },
+        actions: [{ label: 'Zapisz', run: v => act(() => S.renameTask(state, list.id, task.id, v)) }] }) },
+      { label: 'Usuń zadanie', danger: true, run: () => openSheet({ title: 'Usunąć zadanie?',
+        body: `Usunąć „${task.name}”?`,
+        actions: [{ label: 'Usuń zadanie', danger: true, run: () => {
+          const index = list.tasks.indexOf(task);
+          S.pauseTask(state, list.id, task.id, now());
+          act(() => S.deleteTask(state, list.id, task.id));
+          offerUndo('Zadanie usunięte', () => {
+            const current = S.findList(state, list.id);
+            if (current) { current.closedAt = null; current.tasks.splice(index, 0, task); }
+          });
+        } }] }) }
     ] }, e.detail.opener);
   });
 
@@ -335,19 +365,19 @@
     const t = now();
     const rows = list.tasks.map((task, i) => `<tr>
       <td class="n">${i + 1}</td><td>${esc(task.name)}</td><td class="t">${S.fmt(S.elapsed(task, t))}</td></tr>`).join('');
-    const fmtDate = ts => new Date(ts).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+    const fmtDate = ts => new Date(ts).toLocaleString('pl-PL', { dateStyle: 'medium', timeStyle: 'short' });
     document.getElementById('printReport').innerHTML = `
       <h1>${esc(list.name)}</h1>
-      <div class="meta">Created: ${fmtDate(list.createdAt)}<br>Closed: ${fmtDate(list.closedAt)}<br>Tasks: ${list.tasks.length}</div>
+      <div class="meta">Utworzono: ${fmtDate(list.createdAt)}<br>Zamknięto: ${fmtDate(list.closedAt)}<br>Zadania: ${list.tasks.length}</div>
       <table>
-        <thead><tr><th class="n">#</th><th>Task</th><th class="t">Time</th></tr></thead>
+        <thead><tr><th class="n">#</th><th>Zadanie</th><th class="t">Czas</th></tr></thead>
         <tbody>${rows}</tbody>
-        <tfoot><tr><td></td><td>Total</td><td class="t">${S.fmt(S.listTotal(list, t))}</td></tr></tfoot>
+        <tfoot><tr><td></td><td>Łączny czas</td><td class="t">${S.fmt(S.listTotal(list, t))}</td></tr></tfoot>
       </table>
-      <div class="footer">Generated: ${fmtDate(t)}, Task Timer</div>`;
-    // The page title becomes the default file name in "Save as PDF".
+      <div class="footer">Wygenerowano: ${fmtDate(t)}, Task Timer</div>`;
+    // The page title becomes the default file name in "Zapisz jako PDF".
     const prevTitle = document.title;
-    document.title = `${list.name} - time report`;
+    document.title = `${list.name} - raport czasu`;
     window.addEventListener('afterprint', () => { document.title = prevTitle; }, { once: true });
     window.print();
   }
@@ -376,8 +406,8 @@
       try { localStorage.setItem(THEME_KEY, value); } catch (e) {}
       applyTheme();
     } });
-    openSheet({ title: 'Theme', actions: [
-      option('auto', 'Auto (system)'), option('light', 'Light'), option('dark', 'Dark')
+    openSheet({ title: 'Motyw', actions: [
+      option('auto', 'Automatyczny (system)'), option('light', 'Jasny'), option('dark', 'Ciemny')
     ] });
   }
 
@@ -412,24 +442,26 @@
     if (!file) return;
     const backup = S.parseBackup(await file.text());
     if (!backup) {
-      openSheet({ title: "Can't import", body: "This file isn't a Task Timer backup.", cancel: false,
+      openSheet({ title: 'Nie można zaimportować', body: 'Ten plik nie jest kopią zapasową Task Timer.', cancel: false,
         actions: [{ label: 'OK', run: () => {} }] });
       return;
     }
     const n = backup.lists.length;
-    openSheet({ title: 'Replace all data?',
-      body: `Your current lists will be deleted and replaced with ${plural(n, 'list', 'lists')} from the backup.`,
-      actions: [{ label: 'Replace data', danger: true, run: () => {
-        act(() => { state.lists = backup.lists; state.selectedId = null; });
+    openSheet({ title: 'Zastąpić wszystkie dane?',
+      body: `Bieżące dane zostaną zastąpione listami z kopii zapasowej. Liczba list: ${n}.`,
+      actions: [{ label: 'Zastąp dane', danger: true, run: () => {
+        undoAction = null; $toast.hidden = true; pausedRef = null;
+        act(() => { state.lists = backup.lists; state.selectedId = null; delete state.pausedTask; });
         location.hash = '#/';
       } }] });
   });
 
   $dock.addEventListener('click', e => {
     const btn = e.target.closest('[data-dock]');
-    const r = S.running(state);
+    const r = dockTask();
     if (!btn || !r) return;
-    if (btn.dataset.dock === 'pause') act(() => S.pauseTask(state, r.list.id, r.task.id, now()));
+    if (btn.dataset.dock === 'pause') act(() => pauseTimer(r.list.id, r.task.id));
+    else if (btn.dataset.dock === 'resume') act(() => S.startTask(state, r.list.id, r.task.id, now()));
     else act(() => S.finishTask(state, r.list.id, r.task.id, now()));
   });
 
@@ -453,7 +485,7 @@
       const shown = list;
       $app.innerHTML = `<div class="col-lists">${renderLists()}</div>
         <div class="col-main">${shown ? renderList(shown) : `<section class="screen"><div class="empty">
-          <h2>Pick a list</h2><p>Tap a list on the left or create a new one.</p></div></section>`}</div>`;
+          <h2>Wybierz listę</h2><p>Wybierz listę po lewej lub utwórz nową.</p></div></section>`}</div>`;
       $app.querySelector('.col-main').appendChild($dock);
     } else {
       $app.innerHTML = list ? renderList(list) : renderLists();
@@ -512,7 +544,12 @@
     switch (btn.dataset.act) {
       case 'open-new-list': ui.newListOpen = true; render(); break;
       case 'open-add': ui.addOpen = list.id; ui.focusAdd = true; render(); break;
-      case 'toggle': act(() => S.toggleTask(state, list.id, taskId, now())); break;
+      case 'toggle': act(() => {
+        const task = list.tasks.find(t => t.id === taskId);
+        if (task.runningSince != null) pauseTimer(list.id, taskId);
+        else { pausedRef = {listId: list.id, taskId}; S.startTask(state, list.id, taskId, now()); }
+      }); break;
+      case 'task-menu': emit('taskmenu', { listId: list.id, taskId, opener: btn }); break;
       case 'check': {
         const task = list.tasks.find(t => t.id === taskId);
         act(() => task.done ? S.reopenTask(state, list.id, taskId) : S.finishTask(state, list.id, taskId, now()));
@@ -523,9 +560,9 @@
       case 'print': emit('printlist', { listId: list.id }); break;
       case 'hide-hint': hideHint(); break;
       case 'lists-menu': openSheet({ title: 'Menu', body: `Task Timer ${window.APP_VERSION}`, actions: [
-        { label: 'Theme', run: askTheme },
-        { label: 'Export backup', run: exportBackupFile },
-        { label: 'Import backup', run: () => $importFile.click() }
+        { label: 'Motyw', run: askTheme },
+        { label: 'Eksportuj kopię zapasową', run: exportBackupFile },
+        { label: 'Importuj kopię zapasową', run: () => $importFile.click() }
       ] }, btn); break;
     }
   });

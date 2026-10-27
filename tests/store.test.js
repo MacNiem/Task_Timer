@@ -19,6 +19,21 @@ test('fmt formats H:MM:SS', () => {
   assert.equal(S.fmt(999), '0:00:00');
 });
 
+test('clock moving backwards never produces negative elapsed time', () => {
+  const { state, l1, a } = setup();
+  S.startTask(state, l1.id, a.id, 2000);
+  assert.equal(S.elapsed(a, 1000), 0);
+  S.pauseTask(state, l1.id, a.id, 1000);
+  assert.equal(a.elapsedMs, 0);
+  assert.equal(S.fmt(-1000), '0:00:00');
+});
+
+test('load safely rejects malformed stored lists and tasks', () => {
+  for (const lists of [[{}], [null], [{id:'x', name:'X', createdAt:0, closedAt:null, tasks:[{}]}]]) {
+    assert.deepEqual(S.load(JSON.stringify({lists})), {lists:[], selectedId:null});
+  }
+});
+
 test('load: no data and bad JSON give an empty state', () => {
   assert.deepEqual(S.load(null), { lists: [], selectedId: null });
   assert.deepEqual(S.load('{bad'), { lists: [], selectedId: null });

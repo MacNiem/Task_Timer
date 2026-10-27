@@ -1,16 +1,31 @@
 {
   "name": "Task Timer",
   "short_name": "Task Timer",
-  "description": "A stopwatch for your tasks.",
-  "lang": "en",
+  "description": "Mierz czas pracy nad swoimi zadaniami.",
+  "lang": "pl",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#EEF1F4",
   "theme_color": "#1B2430",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
