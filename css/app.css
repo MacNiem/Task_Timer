@@ -349,6 +349,81 @@ details.closed[open] > summary::after { transform: rotate(180deg); }
   .toast { margin: 6px 16px; }
 }
 
+/* My lists: matte canvas and opaque cards, independent of the task screen. */
+.lists-screen {
+  --list-canvas: #EEF1F4;
+  --list-card: #FFFFFF;
+  position: relative;
+  isolation: isolate;
+  background: var(--list-canvas);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+.lists-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .09;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch' seed='8'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Cpath fill='white' filter='url(%23grain)' d='M0 0h180v180H0z'/%3E%3C/svg%3E");
+}
+.lists-screen .head { padding: 20px 20px 16px; }
+.lists-screen .brand { font-size: 24px; letter-spacing: -.5px; margin-bottom: 22px; }
+.lists-screen .title-lists { color: var(--ink); font-size: 22px; font-weight: 600; letter-spacing: -.4px; }
+.lists-screen .rows { padding: 0 20px; }
+.lists-screen .rows > li { margin-bottom: 10px; }
+.lists-screen .list-row {
+  min-height: 78px;
+  padding: 15px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--list-card);
+  box-shadow: 0 2px 6px #0000000a;
+}
+.lists-screen .list-row .name, .lists-screen .list-row .clock {
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -.3px;
+}
+.lists-screen .list-row .sub { margin-top: 4px; font-size: 13px; }
+.lists-screen .list-row[aria-current] { border-color: var(--ink-2); box-shadow: inset 3px 0 0 var(--ink-2); }
+.lists-screen .list-row.has-running { border-color: var(--run); box-shadow: inset 3px 0 0 var(--run); }
+.lists-screen .row-add {
+  justify-content: center;
+  min-height: 54px;
+  margin: 14px 0 0;
+  border: 1px solid #e2a000;
+  border-radius: 12px;
+  background: var(--run);
+  color: #161C24;
+  font-size: 17px;
+  font-weight: 600;
+}
+.lists-screen .row-add .plus { font-size: 24px; width: auto; }
+.lists-screen .closed { margin: 18px 20px 24px; border-top: 1px solid var(--line); }
+.lists-screen .closed > summary { margin: 8px 0; padding: 0; color: var(--ink); font-size: 16px; }
+.lists-screen .closed > summary::after { margin-left: auto; }
+.lists-screen .closed .rows { padding: 0; }
+.lists-screen .row-form { background: var(--list-card); border: 1px solid var(--line); }
+.lists-screen .empty { padding: 24px 20px; }
+.lists-screen .empty form { flex-wrap: wrap; }
+.lists-screen .empty .field { flex-basis: 100%; }
+.lists-screen .empty .btn { width: 100%; }
+:root[data-theme="dark"] .lists-screen { --list-canvas: #161C24; --list-card: #171E26; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .lists-screen { --list-canvas: #161C24; --list-card: #171E26; }
+}
+@media (min-width: 768px) {
+  .lists-screen .head { padding: 20px 16px 16px; }
+  .lists-screen .rows { padding: 0 12px; }
+  .lists-screen .brand { font-size: 22px; }
+  .lists-screen .list-row { padding: 14px 12px; column-gap: 8px; }
+  .lists-screen .list-row .name, .lists-screen .list-row .clock { font-size: 16px; }
+  .lists-screen .closed { margin-right: 12px; margin-left: 12px; }
+}
+
 /* ---------- Print (PDF report) ---------- */
 #printReport { display: none; }
 @media print {

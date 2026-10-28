@@ -3,6 +3,12 @@
 Version numbers follow MAJOR.MINOR.PATCH: a big change, new features, fixes.
 The version is set in `js/version.js` and shown in the app under ⋯ on the Lists screen.
 
+## 2.4.3 — 2026-10-28
+
+- Restyle My lists with a subtle matte grain canvas and opaque rounded list cards
+- Use clearer system typography and a prominent yellow New list button
+- Keep the task screen and its controls unchanged
+
 ## 2.4.2 — 2026-10-28
 
 - Keep the timer bar within the visible mobile viewport, including keyboard and browser resizing

@@ -156,7 +156,7 @@
     const closed = state.lists.filter(l => l.closedAt);
 
     if (!state.lists.length) {
-      return `<section class="screen" aria-label="My lists">
+      return `<section class="screen lists-screen" aria-label="My lists">
         <div class="head"><div class="head-top lists-head"><div><div class="brand"><img src="icons/icon.svg" alt="" width="28" height="28">Task Timer</div><h1 class="title title-lists">My lists</h1></div>${LISTS_MENU_BUTTON}</div></div>
         <div class="empty">
           <h2>Create your first list</h2>
@@ -170,7 +170,7 @@
       ? `<li>${newListForm('row-form', 'Create')}</li>`
       : `<li>${NEW_LIST_BUTTON}</li>`;
 
-    return `<section class="screen" aria-label="My lists">
+    return `<section class="screen lists-screen" aria-label="My lists">
       <div class="head"><div class="head-top lists-head"><div><div class="brand"><img src="icons/icon.svg" alt="" width="28" height="28">Task Timer</div><h1 class="title title-lists">My lists</h1></div>${LISTS_MENU_BUTTON}</div></div>
       <ul class="rows">${active.map(listRow).join('')}${addRow}</ul>
       ${closed.length ? `<details class="closed"${ui.closedOpen ? ' open' : ''}>
