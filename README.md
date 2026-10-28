@@ -25,6 +25,8 @@ After moving the folder, run `Create-shortcut.cmd` again.
 - Named task lists
 - English interface, with task cards and a labeled total time and progress
 - My lists: subtle matte background, rounded list cards and a prominent New list button
+- Matching matte background on the task screen, with its existing layout and controls
+- Matching yellow New list and Add task buttons
 - Separate play/pause buttons for each task; only one timer runs at a time
 - A bottom bar with the clock, Pause / Resume and Finish, kept inside the visible screen
 - On “My lists”, the bar appears only while timing; a paused timer remains available inside its own list

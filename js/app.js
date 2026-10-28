@@ -225,7 +225,7 @@
     if (closed) footer = `<button class="btn btn-main btn-wide" data-act="print">Save as PDF</button>`;
     else if (S.canClose(list)) footer = `<button class="btn btn-done btn-wide" data-act="close">Close list</button>`;
 
-    return `<section class="screen" aria-label="${esc(list.name)}">
+    return `<section class="screen task-screen" aria-label="${esc(list.name)}">
       <div class="head">
         <div class="head-top">
           ${wide.matches ? '' : '<a class="back" href="#/">My lists</a>'}
@@ -670,9 +670,12 @@
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (hadController) document.getElementById('update').hidden = false;
     });
-    navigator.serviceWorker.register('sw.js').then(reg => {
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+      const checkUpdate = () => reg.update().catch(() => {});
+      checkUpdate();
       // Apps left open in the background check for a new version when they come back.
-      document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUpdate(); });
+      window.addEventListener('online', checkUpdate);
     }).catch(() => {});
   }
   document.getElementById('updateReload').addEventListener('click', () => location.reload());

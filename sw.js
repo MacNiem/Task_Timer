@@ -1,7 +1,11 @@
 // Service worker: serves the app files from the cache, so the app works offline.
 // The cache is named after the app version (js/version.js) — bump the version whenever the app files change.
-importScripts('js/version.js');
-const CACHE = `task-timer-${self.APP_VERSION}`;
+// New import URL also recovers installations registered with the old default
+// updateViaCache policy. Future checks bypass HTTP caching via registration.
+importScripts('js/version.js?worker=network-v2');
+// Separate cache revision for the reissued 2.4.3 release: do not write into
+// the cache used by an already installed copy of the original 2.4.3.
+const CACHE = `task-timer-${self.APP_VERSION}-matte-refresh`;
 const FILES = [
   './',
   'index.html',
@@ -36,7 +40,7 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(k => k.startsWith('task-timer-') && k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });

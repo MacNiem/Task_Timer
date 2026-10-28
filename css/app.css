@@ -349,7 +349,7 @@ details.closed[open] > summary::after { transform: rotate(180deg); }
   .toast { margin: 6px 16px; }
 }
 
-/* My lists: matte canvas and opaque cards, independent of the task screen. */
+/* Shared matte canvas; list cards and typography stay scoped to My lists. */
 .lists-screen {
   --list-canvas: #EEF1F4;
   --list-card: #FFFFFF;
@@ -358,7 +358,8 @@ details.closed[open] > summary::after { transform: rotate(180deg); }
   background: var(--list-canvas);
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
-.lists-screen::before {
+.task-screen { position: relative; isolation: isolate; background: var(--bg); }
+.lists-screen::before, .task-screen::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -402,6 +403,17 @@ details.closed[open] > summary::after { transform: rotate(180deg); }
   font-weight: 600;
 }
 .lists-screen .row-add .plus { font-size: 24px; width: auto; }
+.task-screen .tasks > li:has([data-act="open-add"]) { border: 1px solid #e2a000; background: var(--run); }
+.task-screen [data-act="open-add"] {
+  min-height: 54px;
+  border-radius: 12px;
+  background: var(--run);
+  color: #161C24;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+}
+.task-screen [data-act="open-add"] .plus { font-size: 24px; width: auto; }
 .lists-screen .closed { margin: 18px 20px 24px; border-top: 1px solid var(--line); }
 .lists-screen .closed > summary { margin: 8px 0; padding: 0; color: var(--ink); font-size: 16px; }
 .lists-screen .closed > summary::after { margin-left: auto; }

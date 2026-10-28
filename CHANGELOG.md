@@ -5,9 +5,15 @@ The version is set in `js/version.js` and shown in the app under ⋯ on the List
 
 ## 2.4.3 — 2026-10-28
 
+- Bypass stale HTTP-cached version scripts during service worker updates
+- Recover older installations with a fresh version import URL
+- Check for updates at startup, when returning to the app and after reconnecting
+- Restrict old-cache cleanup to Task Timer caches
 - Restyle My lists with a subtle matte grain canvas and opaque rounded list cards
 - Use clearer system typography and a prominent yellow New list button
-- Keep the task screen and its controls unchanged
+- Use the same matte background on the task screen, preserving its layout and controls
+- Match the Add task button to the yellow New list button
+- Use a separate cache revision for this reissued release
 
 ## 2.4.2 — 2026-10-28
 
