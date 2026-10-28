@@ -41,6 +41,18 @@
   const now = () => Date.now();
   const wide = window.matchMedia('(min-width: 768px)');
 
+  // Android standalone windows and the on-screen keyboard can change the visible
+  // height without updating layout viewport units at the same time.
+  function fitViewport() {
+    const viewport = window.visualViewport;
+    document.documentElement.style.setProperty('--app-height', `${viewport ? viewport.height : window.innerHeight}px`);
+    document.documentElement.style.setProperty('--app-top', `${viewport ? viewport.offsetTop : 0}px`);
+  }
+  window.addEventListener('resize', fitViewport);
+  window.visualViewport?.addEventListener('resize', fitViewport);
+  window.visualViewport?.addEventListener('scroll', fitViewport);
+  fitViewport();
+
   // View-only state (not saved).
   const ui = { newListOpen: false };
 
@@ -69,10 +81,18 @@
     act(restore);
   });
   function pauseTimer(listId, taskId) {
+    state.pausedTask = { listId, taskId };
     S.pauseTask(state, listId, taskId, now());
   }
   function dockTask() {
-    return S.running(state);
+    const running = S.running(state);
+    if (running) return running;
+    // A paused timer belongs to its list, never to the list creation screen.
+    const list = shownList();
+    const paused = state.pausedTask;
+    if (!list || list.closedAt || !paused || paused.listId !== list.id) return null;
+    const task = list.tasks.find(t => t.id === paused.taskId && !t.done);
+    return task ? { list, task } : null;
   }
 
   // ---------- Helpers ----------
@@ -111,6 +131,25 @@
   }
 
   const LISTS_MENU_BUTTON = '<button class="icon-btn" data-act="lists-menu" aria-label="Menu">⋮</button>';
+  const NEW_LIST_BUTTON = '<button class="row row-add" data-act="open-new-list"><span class="plus" aria-hidden="true">+</span>New list</button>';
+
+  function dismissNewList() {
+    if (!ui.newListOpen) return;
+    ui.newListOpen = false;
+    const form = document.querySelector('[data-form="new-list"]');
+    // Replace only the form so a click on another list/control still reaches it.
+    if (form?.parentElement.tagName === 'LI') form.parentElement.innerHTML = NEW_LIST_BUTTON;
+  }
+  document.addEventListener('pointerdown', e => {
+    if (!e.target.closest('[data-form="new-list"]')) dismissNewList();
+  }, true);
+  document.addEventListener('focusout', e => {
+    const form = e.target.closest('[data-form="new-list"]');
+    if (!form || !ui.newListOpen) return;
+    setTimeout(() => {
+      if (!form.contains(document.activeElement)) dismissNewList();
+    }, 0);
+  });
 
   function renderLists() {
     const active = state.lists.filter(l => !l.closedAt);
@@ -129,7 +168,7 @@
 
     const addRow = ui.newListOpen
       ? `<li>${newListForm('row-form', 'Create')}</li>`
-      : `<li><button class="row row-add" data-act="open-new-list"><span class="plus" aria-hidden="true">+</span>New list</button></li>`;
+      : `<li>${NEW_LIST_BUTTON}</li>`;
 
     return `<section class="screen" aria-label="My lists">
       <div class="head"><div class="head-top lists-head"><div><div class="brand"><img src="icons/icon.svg" alt="" width="28" height="28">Task Timer</div><h1 class="title title-lists">My lists</h1></div>${LISTS_MENU_BUTTON}</div></div>
@@ -214,11 +253,12 @@
   function renderDock() {
     const r = dockTask();
     if (!r) { $dock.hidden = true; $dock.innerHTML = ''; return; }
+    const running = r.task.runningSince != null;
     $dock.hidden = false;
     $dock.innerHTML = '<div class="dock-in">' +
-      '<a class="dock-info" href="' + listHref(r.list.id) + '"><span class="dock-name">' + esc(r.task.name) + '</span><span class="dock-list">' + 'Running' + ' · ' + esc(r.list.name) + '</span></a>' +
+      '<a class="dock-info" href="' + listHref(r.list.id) + '"><span class="dock-name">' + esc(r.task.name) + '</span><span class="dock-list">' + (running ? 'Running' : 'Paused') + ' · ' + esc(r.list.name) + '</span></a>' +
       '<span class="clock dock-clock" data-time="' + r.task.id + '">' + S.fmt(S.elapsed(r.task, now())) + '</span>' +
-      '<button class="dock-btn dock-pause" data-dock="pause">' + ICON_PAUSE + '<span>Pause</span></button>' +
+      '<button class="dock-btn dock-pause" data-dock="' + (running ? 'pause' : 'resume') + '">' + (running ? ICON_PAUSE : ICON_PLAY) + '<span>' + (running ? 'Pause' : 'Resume') + '</span></button>' +
       '<button class="dock-btn dock-finish" data-dock="finish">' + ICON_CHECK + '<span>Finish</span></button></div>';
   }
 
@@ -462,6 +502,7 @@
     const r = dockTask();
     if (!btn || !r) return;
     if (btn.dataset.dock === 'pause') act(() => pauseTimer(r.list.id, r.task.id));
+    else if (btn.dataset.dock === 'resume') act(() => S.startTask(state, r.list.id, r.task.id, now()));
     else act(() => S.finishTask(state, r.list.id, r.task.id, now()));
   });
 
@@ -638,7 +679,7 @@
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
   // The back gesture / button changes the address — an open sheet belonged to the previous screen.
-  window.addEventListener('hashchange', () => { closeSheet(false); render(); });
+  window.addEventListener('hashchange', () => { dismissNewList(); closeSheet(false); render(); });
   wide.addEventListener('change', render);
   setInterval(tick, 500);
   render();

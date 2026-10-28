@@ -25,7 +25,9 @@ After moving the folder, run `Create-shortcut.cmd` again.
 - Named task lists
 - English interface, with task cards and a labeled total time and progress
 - Separate play/pause buttons for each task; only one timer runs at a time
-- A bottom bar with the clock, Pause and Finish, visible only while a timer is running
+- A bottom bar with the clock, Pause / Resume and Finish, kept inside the visible screen
+- On “My lists”, the bar appears only while timing; a paused timer remains available inside its own list
+- The “New list” form closes when you click outside it or navigate to a list without creating it
 - The checkbox next to a task finishes or reopens it; its visible ⋮ menu allows renaming or deletion
 - Undo the last deleted task or list using “Undo” (available for 10 seconds, until another deletion or page reload)
 - A list can be closed only when all its tasks are finished

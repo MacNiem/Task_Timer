@@ -3,6 +3,12 @@
 Version numbers follow MAJOR.MINOR.PATCH: a big change, new features, fixes.
 The version is set in `js/version.js` and shown in the app under ⋯ on the Lists screen.
 
+## 2.4.2 — 2026-10-28
+
+- Keep the timer bar within the visible mobile viewport, including keyboard and browser resizing
+- Show paused timers with Resume inside their own list; hide them on My lists
+- Close an unsubmitted New list form on outside click, focus leaving the form, or navigation
+
 ## 2.4.1 — 2026-10-28
 
 - English interface, accessibility labels, installation description and PDF reports
