@@ -257,12 +257,94 @@ details.closed[open] > summary::after { transform: rotate(180deg); }
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
 
+/* Refreshed interface */
+.brand { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 600; margin: 6px 0 26px; }
+.title-lists { color: var(--ink-2); font-size: 16px; font-weight: 500; }
+.lists-head { align-items: flex-start; }
+.lists-head > div { flex: 1; min-width: 0; }
+.lists-head .brand { min-height: 48px; margin: 0 0 20px; }
+.lists-head > .icon-btn { margin-top: 0; letter-spacing: 0; }
+.list-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; column-gap: 12px; }
+.rows .list-row .name, .rows .list-row .clock { font-family: var(--font); font-size: 17px; font-weight: 600; line-height: 1.35; color: var(--ink); }
+.list-row .clock { white-space: nowrap; }
+.title { font-size: 28px; }
+.head { padding: 16px var(--pad) 20px; }
+.summary-card { display: flex; align-items: center; gap: 24px; padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); margin-top: 18px; }
+.total { display: flex; flex-direction: column; flex: 1; color: var(--ink-2); font-size: 14px; }
+.total .clock { font-size: 38px; font-weight: 600; color: var(--ink); line-height: 1.2; }
+.summary-progress { flex: 1; min-width: 0; }
+.summary-progress .meta { font-size: 14px; }
+.progress { height: 7px; margin-top: 10px; }
+.rows { border: 0; background: transparent; }
+.rows > li { border: 0; }
+.tasks { padding: 0 var(--pad) 16px; }
+.tasks > li { border: 1px solid var(--line); border-radius: 12px; margin-bottom: 10px; background: var(--surface); }
+.tasks > .is-running { background: var(--run-soft); }
+.task { align-items: center; padding-right: 6px; min-height: 84px; }
+.task .task-main { gap: 10px; padding: 12px 4px; }
+.row .name { font-size: 17px; font-weight: 600; }
+.row .sub { margin-top: 5px; font-size: 13px; }
+.row .clock { color: var(--ink); font-size: 22px; }
+.task .check { width: 48px; min-height: 72px; --c-bg: transparent; --c-border: var(--ink-2); --c-ink: var(--ink); }
+.check::before { left: 12px; width: 24px; height: 24px; border-radius: 6px; margin-top: -12px; }
+.check > svg { margin-left: 24px; }
+.is-done .check { --c-bg: var(--done); --c-border: var(--done); --c-ink: #fff; }
+.is-done .name { text-decoration: none; color: var(--ink-2); }
+.is-done .sub { color: var(--done); }
+.task-control { display: flex; justify-content: center; align-items: center; width: 44px; height: 44px; flex: none; margin-left: 6px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+.task-control.active { background: var(--run); border-color: var(--run); color: #1B2430; }
+.task-menu { width: 40px; flex: none; margin: 0; border-radius: 10px; }
+.task-control svg { width: 18px; height: 18px; }
+.tasks .row-add { justify-content: center; min-height: 56px; font-weight: 600; color: var(--ink); }
+.tasks > li:has(.row-add) { border-style: dashed; }
+.row-form { border-radius: 12px; padding: 8px; }
+.col-lists .row { border-radius: 10px; }
+.col-lists .rows { padding: 0 12px; }
+.col-lists .rows > li { margin-bottom: 8px; }
+.col-lists .row-add { background: var(--run); color: #1B2430; font-weight: 600; margin-top: 16px; }
+.btn-main { background: var(--run); border-color: var(--run); color: #1B2430; }
+.hint { margin-top: 0; }
+#dock[hidden], .toast[hidden] { display: none; }
+#dock { border-top: 1px solid var(--line); }
+.dock-in { gap: 12px; flex-wrap: wrap; }
+.dock-name { color: var(--on-dock); font-size: 16px; }
+.dock-clock { font-size: 30px; }
+.dock-btn { width: auto; min-width: 100px; height: 48px; border-radius: 10px; padding: 0 14px; gap: 8px; font-weight: 600; }
+.dock-btn svg { width: 18px; height: 18px; }
+.toast { flex: none; display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 10px auto; width: calc(100% - 32px); max-width: 600px; padding: 10px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 6px 22px #0002; }
+.toast button { background: transparent; border: 0; color: var(--ink); font-weight: 600; min-height: 44px; text-decoration: underline; }
+@media (min-width: 768px) {
+  #app { max-width: 1280px; }
+  .col-lists { width: 270px; }
+  .col-lists .list-row .clock { font-size: 17px; }
+  .col-main .screen { padding: 0 20px; }
+  .col-main .title { font-size: 30px; }
+  .col-main .head-top { min-height: 42px; }
+  .col-main #dock { margin: 0 20px; border: 1px solid var(--line); border-radius: 14px 14px 0 0; }
+  .dock-clock { font-size: 34px; }
+}
+@media (max-width: 767px) {
+  .summary-card { gap: 14px; padding: 16px; }
+  .total .clock { font-size: 32px; }
+  .task .task-main { flex-wrap: wrap; gap: 2px; }
+  .task .row-main { flex-basis: 100%; }
+  .task .clock { font-size: 18px; color: var(--ink-2); }
+  .task-menu { width: 38px; }
+  .task-control { width: 44px; margin-left: 3px; }
+  .dock-info { flex-basis: 55%; }
+  .dock-clock { margin-left: auto; }
+  .dock-btn { flex: 1; }
+  .empty form { flex-wrap: wrap; }
+  .empty .field { flex-basis: 100%; }
+  .toast { margin: 6px 16px; }
+}
+
 /* ---------- Print (PDF report) ---------- */
 #printReport { display: none; }
 @media print {
   @page { size: A4; margin: 18mm; }
   body { display: block; height: auto; overflow: visible; background: #fff; color: #111; font-size: 12pt; }
-  #app, #dock, #sheet-root, #update, #warn { display: none !important; }
+  #app, #dock, #sheet-root, #update, #warn, #toast { display: none !important; }
   #printReport { display: block; }
   #printReport h1 { font-size: 20pt; margin: 0 0 4pt; }
   #printReport .meta { display: block; color: #555; font-size: 10pt; margin-bottom: 16pt; line-height: 1.5; }

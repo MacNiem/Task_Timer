@@ -23,18 +23,20 @@ After moving the folder, run `Create-shortcut.cmd` again.
 ## Features
 
 - Named task lists
-- Tap a task to start or pause its timer; only one timer runs at a time
-- A bar at the bottom with a large clock for the running task, plus Pause and Finish buttons
-- The circle next to a task finishes or reopens it; press and hold a task to rename or delete it
+- English interface, with task cards and a labeled total time and progress
+- Separate play/pause buttons for each task; only one timer runs at a time
+- A bottom bar with the clock, Pause and Finish, visible only while a timer is running
+- The checkbox next to a task finishes or reopens it; its visible ⋮ menu allows renaming or deletion
+- Undo the last deleted task or list using “Undo” (available for 10 seconds, until another deletion or page reload)
 - A list can be closed only when all its tasks are finished
-- Save a closed list to PDF (task times and total) via the browser's print dialog — “Save as PDF”
-- Backup: export all lists to a file and import them again (⋯ on the Lists screen)
-- Theme: Auto (follows your system), Light or Dark — ⋯ on the Lists screen → Theme
+- Save a closed list to PDF (task times and total) via “Save as PDF”; reopen it from its ⋮ menu
+- Backup: export all lists to a file and import them again (⋮ on “My lists”)
+- Theme: Auto (follows your system), Light or Dark — ⋮ on “My lists” → “Theme”
 - Phone: separate screens for lists and tasks; tablet and desktop: side by side
 
 ## Version
 
-The current version is shown in the app under **⋯ on the Lists screen**. What changed in each version:
+The current version is shown in the app under **⋮ on the Lists screen**. What changed in each version:
 [CHANGELOG.md](CHANGELOG.md).
 
 ## Privacy and security
@@ -47,7 +49,7 @@ The current version is shown in the app under **⋯ on the Lists screen**. What 
   camera or location — it is still a web page running in the browser's sandbox, just with its own icon.
 - **Encrypted connection.** GitHub Pages serves the app over HTTPS.
 - **Data can be lost.** Clearing your browser data or uninstalling the app deletes your lists.
-  Export a backup now and then: **⋯ on the Lists screen → Export backup**. Import it with **Import backup**
+  Export a backup now and then: **⋮ on the Lists screen → Export backup**. Import it with **Import backup**
   — also on another device.
 - **Desktop shortcut script.** `Create-shortcut.cmd` runs a PowerShell script that only creates a
   shortcut. As with any script from the internet, read it before running it.

@@ -44,6 +44,37 @@
   // View-only state (not saved).
   const ui = { newListOpen: false };
 
+  let undoAction = null;
+  let undoTimer = null;
+  function clearUndo() {
+    clearTimeout(undoTimer);
+    undoTimer = null;
+    undoAction = null;
+    $toast.hidden = true;
+    $toast.innerHTML = "";
+  }
+  const $toast = document.getElementById('toast');
+  function offerUndo(message, restore) {
+    clearUndo();
+    undoAction = restore;
+    $toast.hidden = false;
+    $toast.innerHTML = '<span></span><button type="button">Undo</button>';
+    $toast.querySelector('span').textContent = message;
+    undoTimer = setTimeout(clearUndo, 10000);
+  }
+  $toast.addEventListener('click', e => {
+    if (!e.target.closest('button') || !undoAction) return;
+    const restore = undoAction;
+    clearUndo();
+    act(restore);
+  });
+  function pauseTimer(listId, taskId) {
+    S.pauseTask(state, listId, taskId, now());
+  }
+  function dockTask() {
+    return S.running(state);
+  }
+
   // ---------- Helpers ----------
   function esc(str) {
     return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -60,13 +91,13 @@
     return { view: 'lists' };
   }
 
-  // ---------- "Lists" screen ----------
+  // ---------- "My lists" screen ----------
   function listRow(list) {
     const sub = list.closedAt ? 'Closed'
       : list.tasks.length ? `${doneCount(list)} of ${list.tasks.length} done` : 'No tasks';
     const current = wide.matches && list.id === state.selectedId ? ' aria-current="page"' : '';
     const runningHere = S.running(state)?.list.id === list.id ? ' has-running' : '';
-    return `<li><a class="row${runningHere}" href="${listHref(list.id)}"${current}>
+    return `<li><a class="row list-row${runningHere}" href="${listHref(list.id)}"${current}>
       <span class="row-main"><span class="name">${esc(list.name)}</span><span class="sub">${sub}</span></span>
       <span class="clock" data-total="${list.id}">${S.fmt(S.listTotal(list, now()))}</span>
     </a></li>`;
@@ -74,23 +105,23 @@
 
   function newListForm(cls, label) {
     return `<form class="${cls}" data-form="new-list">
-      <input class="field" name="name" maxlength="100" placeholder="e.g. Product Launch" aria-label="List name" autocomplete="off" required>
+      <input class="field" name="name" maxlength="100" placeholder="e.g. Website project" aria-label="List name" autocomplete="off" required>
       <button class="btn btn-main" type="submit">${label}</button>
     </form>`;
   }
 
-  const LISTS_MENU_BUTTON = '<button class="icon-btn" data-act="lists-menu" aria-label="Menu">⋯</button>';
+  const LISTS_MENU_BUTTON = '<button class="icon-btn" data-act="lists-menu" aria-label="Menu">⋮</button>';
 
   function renderLists() {
     const active = state.lists.filter(l => !l.closedAt);
     const closed = state.lists.filter(l => l.closedAt);
 
     if (!state.lists.length) {
-      return `<section class="screen" aria-label="Lists">
-        <div class="head"><div class="head-top"><h1 class="title title-lists">Lists</h1>${LISTS_MENU_BUTTON}</div></div>
+      return `<section class="screen" aria-label="My lists">
+        <div class="head"><div class="head-top lists-head"><div><div class="brand"><img src="icons/icon.svg" alt="" width="28" height="28">Task Timer</div><h1 class="title title-lists">My lists</h1></div>${LISTS_MENU_BUTTON}</div></div>
         <div class="empty">
-          <h2>Start your first list</h2>
-          <p>Name a list, add tasks to it and time your work.</p>
+          <h2>Create your first list</h2>
+          <p>Name a list, add tasks and track your time.</p>
           ${newListForm('', 'Create list')}
         </div>
       </section>`;
@@ -100,11 +131,11 @@
       ? `<li>${newListForm('row-form', 'Create')}</li>`
       : `<li><button class="row row-add" data-act="open-new-list"><span class="plus" aria-hidden="true">+</span>New list</button></li>`;
 
-    return `<section class="screen" aria-label="Lists">
-      <div class="head"><div class="head-top"><h1 class="title title-lists">Lists</h1>${LISTS_MENU_BUTTON}</div></div>
+    return `<section class="screen" aria-label="My lists">
+      <div class="head"><div class="head-top lists-head"><div><div class="brand"><img src="icons/icon.svg" alt="" width="28" height="28">Task Timer</div><h1 class="title title-lists">My lists</h1></div>${LISTS_MENU_BUTTON}</div></div>
       <ul class="rows">${active.map(listRow).join('')}${addRow}</ul>
       ${closed.length ? `<details class="closed"${ui.closedOpen ? ' open' : ''}>
-        <summary>Closed (${closed.length})</summary>
+        <summary>Archive (${closed.length})</summary>
         <ul class="rows">${closed.map(listRow).join('')}</ul>
       </details>` : ''}
     </section>`;
@@ -124,18 +155,15 @@
   function taskRow(list, task) {
     const st = taskState(task);
     const running = task.runningSince != null;
-    const time = `<span class="clock" data-time="${task.id}">${S.fmt(S.elapsed(task, now()))}</span>`;
-    const info = `<span class="row-main"><span class="name">${esc(task.name)}</span><span class="sub">${st.label}</span></span>`;
-    const mark = task.done ? ICON_CHECK : running ? ICON_PLAY : '';
-
-    if (list.closedAt) {
-      return `<li class="task ${st.cls}"><span class="check" aria-hidden="true">${mark}</span>
-        <div class="row task-main">${info}${time}</div></li>`;
-    }
-    return `<li class="task ${st.cls}">
-      <button class="check" data-act="check" data-task="${task.id}" aria-label="${task.done ? 'Reopen task' : 'Finish task'}">${mark}</button>
-      <button class="row task-main" data-act="toggle" data-task="${task.id}" aria-pressed="${running}">${info}${time}</button>
-    </li>`;
+    const info = '<div class="row-main"><span class="name">' + esc(task.name) + '</span><span class="sub">' + st.label + '</span></div>';
+    const time = '<span class="clock" data-time="' + task.id + '">' + S.fmt(S.elapsed(task, now())) + '</span>';
+    const mark = task.done ? ICON_CHECK : '';
+    if (list.closedAt) return '<li class="task ' + st.cls + '"><span class="check" aria-hidden="true">' + mark + '</span><div class="row task-main">' + info + time + '</div></li>';
+    return '<li class="task ' + st.cls + '">' +
+      '<button class="check" data-act="check" data-task="' + task.id + '" aria-label="' + (task.done ? 'Reopen: ' : 'Finish: ') + esc(task.name) + '">' + mark + '</button>' +
+      '<div class="row task-main">' + info + time + '</div>' +
+      (!task.done ? '<button class="task-control' + (running ? ' active' : '') + '" data-act="toggle" data-task="' + task.id + '" aria-label="' + (running ? 'Pause: ' : 'Start: ') + esc(task.name) + '">' + (running ? ICON_PAUSE : ICON_PLAY) + '</button>' : '') +
+      '<button class="icon-btn task-menu" data-act="task-menu" data-task="' + task.id + '" aria-label="Task menu: ' + esc(task.name) + '">⋮</button></li>';
   }
 
   const ADD_TASK_BUTTON = '<button class="row row-add" data-act="open-add"><span class="plus" aria-hidden="true">+</span>Add task</button>';
@@ -149,7 +177,7 @@
 
     const addRow = closed ? '' : addOpen
       ? `<li><form class="row-form" data-form="new-task">
-          <input class="field" name="name" maxlength="200" placeholder="e.g. Prepare Presentation" aria-label="Task name" autocomplete="off" enterkeyhint="done">
+          <input class="field" name="name" maxlength="200" placeholder="e.g. Prepare the project" aria-label="Task name" autocomplete="off" enterkeyhint="done">
           <button class="btn btn-main" type="submit">Add</button>
         </form></li>`
       : `<li>${ADD_TASK_BUTTON}</li>`;
@@ -161,18 +189,17 @@
     return `<section class="screen" aria-label="${esc(list.name)}">
       <div class="head">
         <div class="head-top">
-          ${wide.matches ? '' : '<a class="back" href="#/">Lists</a>'}
-          <button class="icon-btn" data-act="list-menu" aria-label="List menu">⋯</button>
+          ${wide.matches ? '' : '<a class="back" href="#/">My lists</a>'}
+          <button class="icon-btn" data-act="list-menu" aria-label="List menu">⋮</button>
         </div>
         <h1 class="title">${esc(list.name)}${closed ? '<span class="badge">Closed</span>' : ''}</h1>
-        <div class="meta">
+        <div class="summary-card"><div class="total"><span>Total time</span><span class="clock" data-total="${list.id}">${S.fmt(S.listTotal(list, now()))}</span></div><div class="summary-progress"><div class="meta">
           <span>${empty ? 'Add your first task' : `${done} of ${total} done`}</span>
-          <span class="clock" data-total="${list.id}">${S.fmt(S.listTotal(list, now()))}</span>
         </div>
-        <div class="progress" aria-hidden="true"><span style="width:${total ? (done / total) * 100 : 0}%"></span></div>
+        <div class="progress" role="progressbar" aria-label="Task progress" aria-valuemin="0" aria-valuemax="${total || 1}" aria-valuenow="${done}"><span style="width:${total ? (done / total) * 100 : 0}%"></span></div></div></div>
       </div>
       <ul class="rows tasks">${list.tasks.map(t => taskRow(list, t)).join('')}${addRow}</ul>
-      ${!closed && total && !hintSeen() ? `<p class="hint">Press and hold a task to rename or delete it.
+      ${!closed && total && !hintSeen() ? `<p class="hint">Use the task menu to rename or delete a task.
         <button class="hint-x" data-act="hide-hint" aria-label="Dismiss tip">×</button></p>` : ''}
       ${footer}
     </section>`;
@@ -185,21 +212,14 @@
   const $dock = document.getElementById('dock');
 
   function renderDock() {
-    const r = S.running(state);
+    const r = dockTask();
     if (!r) { $dock.hidden = true; $dock.innerHTML = ''; return; }
-    const shown = shownList();
-    const elsewhere = !shown || r.list.id !== shown.id;
-    const entering = $dock.hidden;
     $dock.hidden = false;
-    $dock.innerHTML = `<div class="dock-in${entering ? ' is-entering' : ''}">
-      <a class="dock-info" href="${listHref(r.list.id)}">
-        <span class="dock-name"><span class="dot" aria-hidden="true"></span>${esc(r.task.name)}</span>
-        ${elsewhere ? `<span class="dock-list">${esc(r.list.name)}</span>` : ''}
-        <span class="clock dock-clock" data-time="${r.task.id}">${S.fmt(S.elapsed(r.task, now()))}</span>
-      </a>
-      <button class="dock-btn dock-pause" data-dock="pause" aria-label="Pause">${ICON_PAUSE}</button>
-      <button class="dock-btn dock-finish" data-dock="finish" aria-label="Finish task">${ICON_CHECK.replace(/16/g, '22')}</button>
-    </div>`;
+    $dock.innerHTML = '<div class="dock-in">' +
+      '<a class="dock-info" href="' + listHref(r.list.id) + '"><span class="dock-name">' + esc(r.task.name) + '</span><span class="dock-list">' + 'Running' + ' · ' + esc(r.list.name) + '</span></a>' +
+      '<span class="clock dock-clock" data-time="' + r.task.id + '">' + S.fmt(S.elapsed(r.task, now())) + '</span>' +
+      '<button class="dock-btn dock-pause" data-dock="pause">' + ICON_PAUSE + '<span>Pause</span></button>' +
+      '<button class="dock-btn dock-finish" data-dock="finish">' + ICON_CHECK + '<span>Finish</span></button></div>';
   }
 
   // ---------- Sheets (instead of confirm / prompt) ----------
@@ -238,7 +258,7 @@
   }
 
   function setInert(on) {
-    ['app', 'dock', 'warn', 'update'].forEach(id => { document.getElementById(id).inert = on; });
+    ['app', 'dock', 'warn', 'update', 'toast'].forEach(id => { document.getElementById(id).inert = on; });
   }
 
   function runSheetAction(i) {
@@ -275,18 +295,21 @@
   function askCloseList(list, opener) {
     const left = S.remaining(list);
     if (!S.canClose(list)) {
-      return openSheet({ title: "Can't close this list", cancel: false,
-        body: list.tasks.length ? `Finish all tasks first (${plural(left, 'task', 'tasks')} left).` : 'Add and finish at least one task.',
+      return openSheet({ title: 'Can’t close this list', cancel: false,
+        body: list.tasks.length ? `Finish all tasks first. Remaining: ${left}.` : 'Add and finish at least one task.',
         actions: [{ label: 'OK', run: () => {} }] }, opener);
     }
-    openSheet({ title: 'Close list?', body: `Close “${list.name}”? You won't be able to change it afterwards.`,
+    openSheet({ title: 'Close list?', body: `Close “${list.name}” and move it to the archive? You can reopen it later.`,
       actions: [{ label: 'Close list', run: () => act(() => S.closeList(state, list.id, now())) }] }, opener);
   }
 
   function askDeleteList(list) {
-    openSheet({ title: 'Delete list?', body: `Delete “${list.name}”? This can't be undone.`,
+    openSheet({ title: 'Delete list?', body: `Delete “${list.name}”? You can undo this for 10 seconds.`,
       actions: [{ label: 'Delete list', danger: true, run: () => {
+        const index = state.lists.indexOf(list);
+        list.tasks.forEach(task => S.pauseTask(state, list.id, task.id, now()));
         act(() => S.deleteList(state, list.id));
+        offerUndo('List deleted', () => { state.lists.splice(index, 0, list); state.selectedId = list.id; });
         location.hash = '#/';
       } }] });
   }
@@ -294,7 +317,7 @@
   document.addEventListener('listmenu', e => {
     const list = S.findList(state, e.detail.listId);
     const actions = list.closedAt
-      ? [{ label: 'Save as PDF', run: () => printList(list) }]
+      ? [{ label: 'Save as PDF', run: () => printList(list) }, { label: 'Reopen list', run: () => act(() => { list.closedAt = null; }) }]
       : [{ label: 'Rename', run: () => askRenameList(list) },
          { label: 'Close list', run: () => askCloseList(list) }];
     actions.push({ label: 'Delete list', danger: true, run: () => askDeleteList(list) });
@@ -310,8 +333,16 @@
       { label: 'Rename', run: () => openSheet({ title: 'Rename task', input: { value: task.name },
         actions: [{ label: 'Save', run: v => act(() => S.renameTask(state, list.id, task.id, v)) }] }) },
       { label: 'Delete task', danger: true, run: () => openSheet({ title: 'Delete task?',
-        body: `Delete “${task.name}”?`,
-        actions: [{ label: 'Delete task', danger: true, run: () => act(() => S.deleteTask(state, list.id, task.id)) }] }) }
+        body: `Delete “${task.name}”? You can undo this for 10 seconds.`,
+        actions: [{ label: 'Delete task', danger: true, run: () => {
+          const index = list.tasks.indexOf(task);
+          S.pauseTask(state, list.id, task.id, now());
+          act(() => S.deleteTask(state, list.id, task.id));
+          offerUndo('Task deleted', () => {
+            const current = S.findList(state, list.id);
+            if (current) { current.closedAt = null; current.tasks.splice(index, 0, task); }
+          });
+        } }] }) }
     ] }, e.detail.opener);
   });
 
@@ -342,7 +373,7 @@
       <table>
         <thead><tr><th class="n">#</th><th>Task</th><th class="t">Time</th></tr></thead>
         <tbody>${rows}</tbody>
-        <tfoot><tr><td></td><td>Total</td><td class="t">${S.fmt(S.listTotal(list, t))}</td></tr></tfoot>
+        <tfoot><tr><td></td><td>Total time</td><td class="t">${S.fmt(S.listTotal(list, t))}</td></tr></tfoot>
       </table>
       <div class="footer">Generated: ${fmtDate(t)}, Task Timer</div>`;
     // The page title becomes the default file name in "Save as PDF".
@@ -412,24 +443,25 @@
     if (!file) return;
     const backup = S.parseBackup(await file.text());
     if (!backup) {
-      openSheet({ title: "Can't import", body: "This file isn't a Task Timer backup.", cancel: false,
+      openSheet({ title: 'Can’t import', body: 'This file is not a Task Timer backup.', cancel: false,
         actions: [{ label: 'OK', run: () => {} }] });
       return;
     }
     const n = backup.lists.length;
     openSheet({ title: 'Replace all data?',
-      body: `Your current lists will be deleted and replaced with ${plural(n, 'list', 'lists')} from the backup.`,
+      body: `Your current data will be replaced by the backup. Lists: ${n}.`,
       actions: [{ label: 'Replace data', danger: true, run: () => {
-        act(() => { state.lists = backup.lists; state.selectedId = null; });
+        clearUndo();
+        act(() => { state.lists = backup.lists; state.selectedId = null; delete state.pausedTask; });
         location.hash = '#/';
       } }] });
   });
 
   $dock.addEventListener('click', e => {
     const btn = e.target.closest('[data-dock]');
-    const r = S.running(state);
+    const r = dockTask();
     if (!btn || !r) return;
-    if (btn.dataset.dock === 'pause') act(() => S.pauseTask(state, r.list.id, r.task.id, now()));
+    if (btn.dataset.dock === 'pause') act(() => pauseTimer(r.list.id, r.task.id));
     else act(() => S.finishTask(state, r.list.id, r.task.id, now()));
   });
 
@@ -453,7 +485,7 @@
       const shown = list;
       $app.innerHTML = `<div class="col-lists">${renderLists()}</div>
         <div class="col-main">${shown ? renderList(shown) : `<section class="screen"><div class="empty">
-          <h2>Pick a list</h2><p>Tap a list on the left or create a new one.</p></div></section>`}</div>`;
+          <h2>Choose a list</h2><p>Choose a list on the left or create a new one.</p></div></section>`}</div>`;
       $app.querySelector('.col-main').appendChild($dock);
     } else {
       $app.innerHTML = list ? renderList(list) : renderLists();
@@ -512,7 +544,12 @@
     switch (btn.dataset.act) {
       case 'open-new-list': ui.newListOpen = true; render(); break;
       case 'open-add': ui.addOpen = list.id; ui.focusAdd = true; render(); break;
-      case 'toggle': act(() => S.toggleTask(state, list.id, taskId, now())); break;
+      case 'toggle': act(() => {
+        const task = list.tasks.find(t => t.id === taskId);
+        if (task.runningSince != null) pauseTimer(list.id, taskId);
+        else { S.startTask(state, list.id, taskId, now()); }
+      }); break;
+      case 'task-menu': emit('taskmenu', { listId: list.id, taskId, opener: btn }); break;
       case 'check': {
         const task = list.tasks.find(t => t.id === taskId);
         act(() => task.done ? S.reopenTask(state, list.id, taskId) : S.finishTask(state, list.id, taskId, now()));

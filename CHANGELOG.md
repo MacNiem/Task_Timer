@@ -3,6 +3,24 @@
 Version numbers follow MAJOR.MINOR.PATCH: a big change, new features, fixes.
 The version is set in `js/version.js` and shown in the app under ⋯ on the Lists screen.
 
+## 2.4.1 — 2026-10-28
+
+- English interface, accessibility labels, installation description and PDF reports
+- Timer bar appears only while a task is running
+- Vertical menu buttons throughout the app; main menu aligned with the Task Timer brand
+- List names and totals use the same font size and align at the top
+- Undo notifications expire after 10 seconds; a new deletion restarts the countdown
+
+## 2.4.0 — 2026-10-27
+
+- Polish interface and PDF reports
+- Refreshed task cards, a labeled total and clearer progress
+- Separate start/pause and completion controls, visible task menus
+- Persistent paused timer with Resume, including after reloading
+- Undo the last deleted task or list; reopen archived lists
+- Protect timer values when the system clock moves backwards
+- Validate saved data before loading
+
 ## 2.3.0 — 2026-10-24
 
 - Theme switch: Auto (follows the system), Light or Dark — ⋯ → Theme

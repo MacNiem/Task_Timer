@@ -9,7 +9,7 @@
   }
 
   function elapsed(task, now) {
-    return task.elapsedMs + (isRunning(task) ? now - task.runningSince : 0);
+    return task.elapsedMs + (isRunning(task) ? Math.max(0, now - task.runningSince) : 0);
   }
 
   function listTotal(list, now) {
@@ -17,7 +17,7 @@
   }
 
   function fmt(ms) {
-    const total = Math.floor(ms / 1000);
+    const total = Math.floor(Math.max(0, ms) / 1000);
     const h = Math.floor(total / 3600);
     const m = Math.floor((total % 3600) / 60);
     const s = total % 60;
@@ -30,7 +30,7 @@
 
   function stop(task, now) {
     if (isRunning(task)) {
-      task.elapsedMs += now - task.runningSince;
+      task.elapsedMs += Math.max(0, now - task.runningSince);
       task.runningSince = null;
     }
   }
@@ -48,7 +48,7 @@
     if (!raw) return empty();
     let state;
     try { state = JSON.parse(raw); } catch (e) { return empty(); }
-    if (!state || !Array.isArray(state.lists)) return empty();
+    if (!state || !Array.isArray(state.lists) || !state.lists.every(validList)) return empty();
     if (state.selectedId === undefined) state.selectedId = null;
     migrate(state);
     return state;
