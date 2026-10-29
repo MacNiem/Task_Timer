@@ -3,6 +3,11 @@
 Version numbers follow MAJOR.MINOR.PATCH: a big change, new features, fixes.
 The version is set in `js/version.js` and shown in the app under ⋯ on the Lists screen.
 
+## 2.4.4 — 2026-10-29
+
+- Keep the first-list name field at full input height on desktop and mobile
+- Use a single-column grid for the empty-state form to avoid conflicting flex sizes
+
 ## 2.4.3 — 2026-10-28
 
 - Bypass stale HTTP-cached version scripts during service worker updates

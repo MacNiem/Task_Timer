@@ -420,8 +420,8 @@ details.closed[open] > summary::after { transform: rotate(180deg); }
 .lists-screen .closed .rows { padding: 0; }
 .lists-screen .row-form { background: var(--list-card); border: 1px solid var(--line); }
 .lists-screen .empty { padding: 24px 20px; }
-.lists-screen .empty form { flex-wrap: wrap; }
-.lists-screen .empty .field { flex-basis: 100%; }
+.lists-screen .empty form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.lists-screen .empty .field { width: 100%; min-height: var(--tap); }
 .lists-screen .empty .btn { width: 100%; }
 :root[data-theme="dark"] .lists-screen { --list-canvas: #161C24; --list-card: #171E26; }
 @media (prefers-color-scheme: dark) {
