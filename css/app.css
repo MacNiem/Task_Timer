@@ -373,8 +373,8 @@ details.closed[open] > summary::after { transform: rotate(180deg); }
   background: var(--list-canvas);
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
-.task-screen { position: relative; isolation: isolate; background: var(--bg); }
-.lists-screen::before, .task-screen::before {
+.task-screen, .col-main { position: relative; isolation: isolate; background: var(--bg); }
+.lists-screen::before, .task-screen::before, .col-main::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -443,6 +443,9 @@ details.closed[open] > summary::after { transform: rotate(180deg); }
   :root:not([data-theme="light"]) .lists-screen { --list-canvas: #161C24; --list-card: #171E26; }
 }
 @media (min-width: 768px) {
+  /* The panel's texture continues behind the timer dock. */
+  .col-main .task-screen { background: transparent; }
+  .col-main .task-screen::before { content: none; }
   .lists-screen .head { padding: 20px 16px 16px; }
   .lists-screen .rows { padding: 0 12px; }
   .lists-screen .brand { font-size: 22px; }
