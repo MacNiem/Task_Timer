@@ -72,3 +72,14 @@ test('parseBackup leaves only one timer running', () => {
   assert.equal(S.running(restored).task.id, 'b');
   assert.equal(restored.lists[0].tasks[0].elapsedMs, 2000);
 });
+
+test('backup and saved data reject invalid list and task identifiers', () => {
+  for (const field of ['list', 'task']) {
+    const state = sampleState();
+    const list = state.lists[0];
+    const item = field === 'list' ? list : list.tasks[0];
+    item.id = 'invalid id';
+    assert.equal(S.parseBackup(S.exportBackup(state, 5000)), null);
+    assert.deepEqual(S.load(S.serialize(state)).lists, []);
+  }
+});

@@ -72,9 +72,10 @@
 
   const isNum = v => typeof v === 'number' && Number.isFinite(v);
   const isStr = v => typeof v === 'string';
-  const validTask = t => t && isStr(t.id) && isStr(t.name) && isNum(t.elapsedMs) && t.elapsedMs >= 0
+  const validId = id => isStr(id) && /^[a-zA-Z0-9_-]{1,128}$/.test(id);
+  const validTask = t => t && validId(t.id) && isStr(t.name) && isNum(t.elapsedMs) && t.elapsedMs >= 0
     && (t.runningSince === null || isNum(t.runningSince)) && typeof t.done === 'boolean';
-  const validList = l => l && isStr(l.id) && isStr(l.name) && isNum(l.createdAt)
+  const validList = l => l && validId(l.id) && isStr(l.name) && isNum(l.createdAt)
     && (l.closedAt === null || isNum(l.closedAt)) && Array.isArray(l.tasks) && l.tasks.every(validTask);
 
   // Returns the state from a backup file, or null when the text is not a valid Task Timer backup.

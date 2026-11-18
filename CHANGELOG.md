@@ -3,6 +3,12 @@
 Version numbers follow MAJOR.MINOR.PATCH: a big change, new features, fixes.
 The version is set in `js/version.js` and shown in the app under ⋯ on the Lists screen.
 
+## 2.4.8 — 2026-11-18
+
+- Validate backup identifiers and escape them in HTML attributes
+- Limit backup imports to 10 MB and handle unreadable files
+- Recover from malformed list links
+
 ## 2.4.7 — 2026-11-18
 
 - Extend the matte task background around the desktop timer bar

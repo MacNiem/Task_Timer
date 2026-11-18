@@ -106,7 +106,9 @@
   function route() {
     // #/lista/ is the address from the Polish version — old links still work.
     const m = location.hash.match(/^#\/lista?\/(.+)$/);
-    const listId = m && decodeURIComponent(m[1]);
+    let listId;
+    try { listId = m && decodeURIComponent(m[1]); }
+    catch { return { view: 'lists' }; }
     if (listId && S.findList(state, listId)) return { view: 'list', listId };
     return { view: 'lists' };
   }
@@ -119,7 +121,7 @@
     const runningHere = S.running(state)?.list.id === list.id ? ' has-running' : '';
     return `<li><a class="row list-row${runningHere}" href="${listHref(list.id)}"${current}>
       <span class="row-main"><span class="name">${esc(list.name)}</span><span class="sub">${sub}</span></span>
-      <span class="clock" data-total="${list.id}">${S.fmt(S.listTotal(list, now()))}</span>
+      <span class="clock" data-total="${esc(list.id)}">${S.fmt(S.listTotal(list, now()))}</span>
     </a></li>`;
   }
 
@@ -195,14 +197,14 @@
     const st = taskState(task);
     const running = task.runningSince != null;
     const info = '<div class="row-main"><span class="name">' + esc(task.name) + '</span><span class="sub">' + st.label + '</span></div>';
-    const time = '<span class="clock" data-time="' + task.id + '">' + S.fmt(S.elapsed(task, now())) + '</span>';
+    const time = '<span class="clock" data-time="' + esc(task.id) + '">' + S.fmt(S.elapsed(task, now())) + '</span>';
     const mark = task.done ? ICON_CHECK : '';
     if (list.closedAt) return '<li class="task ' + st.cls + '"><span class="check" aria-hidden="true">' + mark + '</span><div class="row task-main">' + info + time + '</div></li>';
     return '<li class="task ' + st.cls + '">' +
-      '<button class="check" data-act="check" data-task="' + task.id + '" aria-label="' + (task.done ? 'Reopen: ' : 'Finish: ') + esc(task.name) + '">' + mark + '</button>' +
+      '<button class="check" data-act="check" data-task="' + esc(task.id) + '" aria-label="' + (task.done ? 'Reopen: ' : 'Finish: ') + esc(task.name) + '">' + mark + '</button>' +
       '<div class="row task-main">' + info + time + '</div>' +
-      (!task.done ? '<button class="task-control' + (running ? ' active' : '') + '" data-act="toggle" data-task="' + task.id + '" aria-label="' + (running ? 'Pause: ' : 'Start: ') + esc(task.name) + '">' + (running ? ICON_PAUSE : ICON_PLAY) + '</button>' : '') +
-      '<button class="icon-btn task-menu" data-act="task-menu" data-task="' + task.id + '" aria-label="Task menu: ' + esc(task.name) + '">⋮</button></li>';
+      (!task.done ? '<button class="task-control' + (running ? ' active' : '') + '" data-act="toggle" data-task="' + esc(task.id) + '" aria-label="' + (running ? 'Pause: ' : 'Start: ') + esc(task.name) + '">' + (running ? ICON_PAUSE : ICON_PLAY) + '</button>' : '') +
+      '<button class="icon-btn task-menu" data-act="task-menu" data-task="' + esc(task.id) + '" aria-label="Task menu: ' + esc(task.name) + '">⋮</button></li>';
   }
 
   const ADD_TASK_BUTTON = '<button class="row row-add" data-act="open-add"><span class="plus" aria-hidden="true">+</span>Add task</button>';
@@ -232,7 +234,7 @@
           <button class="icon-btn" data-act="list-menu" aria-label="List menu">⋮</button>
         </div>
         <h1 class="title">${esc(list.name)}${closed ? '<span class="badge">Closed</span>' : ''}</h1>
-        <div class="summary-card"><div class="total"><span>Total time</span><span class="clock" data-total="${list.id}">${S.fmt(S.listTotal(list, now()))}</span></div><div class="summary-progress"><div class="meta">
+        <div class="summary-card"><div class="total"><span>Total time</span><span class="clock" data-total="${esc(list.id)}">${S.fmt(S.listTotal(list, now()))}</span></div><div class="summary-progress"><div class="meta">
           <span>${empty ? 'Add your first task' : `${done} of ${total} done`}</span>
         </div>
         <div class="progress" role="progressbar" aria-label="Task progress" aria-valuemin="0" aria-valuemax="${total || 1}" aria-valuenow="${done}"><span style="width:${total ? (done / total) * 100 : 0}%"></span></div></div></div>
@@ -263,7 +265,7 @@
     $dock.hidden = false;
     $dock.innerHTML = '<div class="dock-in">' +
       '<a class="dock-info" href="' + listHref(r.list.id) + '"><span class="dock-name">' + esc(r.task.name) + '</span><span class="dock-list">' + (running ? 'Running' : 'Paused') + ' · ' + esc(r.list.name) + '</span></a>' +
-      '<span class="clock dock-clock" data-time="' + r.task.id + '">' + S.fmt(S.elapsed(r.task, now())) + '</span>' +
+      '<span class="clock dock-clock" data-time="' + esc(r.task.id) + '">' + S.fmt(S.elapsed(r.task, now())) + '</span>' +
       '<button class="dock-btn dock-pause" data-dock="' + (running ? 'pause' : 'resume') + '">' + (running ? ICON_PAUSE : ICON_PLAY) + '<span>' + (running ? 'Pause' : 'Resume') + '</span></button>' +
       '<button class="dock-btn dock-finish" data-dock="finish">' + ICON_CHECK + '<span>Finish</span></button></div>';
   }
@@ -490,7 +492,14 @@
     const file = $importFile.files[0];
     $importFile.value = '';
     if (!file) return;
-    const backup = S.parseBackup(await file.text());
+    if (file.size > 10 * 1024 * 1024) {
+      openSheet({ title: 'Can’t import', body: 'The backup exceeds the 10 MB import limit.', cancel: false,
+        actions: [{ label: 'OK', run: () => {} }] });
+      return;
+    }
+    let backup;
+    try { backup = S.parseBackup(await file.text()); }
+    catch { backup = null; }
     if (!backup) {
       openSheet({ title: 'Can’t import', body: 'This file is not a Task Timer backup.', cancel: false,
         actions: [{ label: 'OK', run: () => {} }] });
