@@ -457,14 +457,21 @@ details.closed[open] > summary::after { transform: rotate(180deg); }
 /* ---------- Print (PDF report) ---------- */
 #printReport { display: none; }
 @media print {
-  @page { size: A4; margin: 24mm 23mm; }
+  @page { size: A4; margin: 24mm 23mm; background: #fff; }
+  :root { color-scheme: light !important; background: #fff; }
   body { position: static; display: block; height: auto; overflow: visible; background: #fff; color: #111; font-size: 12pt; }
   #app, #dock, #sheet-root, #update, #warn, #toast { display: none !important; }
   #printReport { display: block; font: 11pt/1.5 "Segoe UI", Arial, sans-serif; overflow-wrap: anywhere; }
-  #printReport header { margin-bottom: 18pt; break-inside: avoid; }
-  #printReport .report-label { margin: 0 0 5pt; color: #455364; font-size: 9pt; font-weight: 700; letter-spacing: .05em; }
+  #printReport header { margin-bottom: 18pt; padding: 14pt 16pt; border: 1px solid #d2d8df; border-left: 3pt solid #f2a900; break-inside: avoid; }
+  #printReport .report-masthead { display: flex; justify-content: space-between; align-items: center; gap: 12pt; padding-bottom: 12pt; margin-bottom: 14pt; border-bottom: 1px solid #d2d8df; }
+  #printReport .report-brand { display: flex; align-items: center; gap: 9pt; color: #1b2430; }
+  #printReport .report-brand img { width: 30pt; height: 30pt; border-radius: 6pt; }
+  #printReport .report-stamp { text-align: right; }
+  #printReport .report-stamp span { display: block; color: #455364; font-size: 9pt; }
   #printReport h1 { font-size: 24pt; line-height: 1.15; margin: 0 0 10pt; }
-  #printReport .meta { display: block; color: #455364; font-size: 10pt; }
+  #printReport .report-details { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12pt; margin: 0; font-size: 10pt; }
+  #printReport .report-details dt { color: #455364; font-size: 9pt; }
+  #printReport .report-details dd { margin: 2pt 0 0; font-weight: 600; }
   #printReport table { width: 100%; border-collapse: collapse; }
   #printReport tr { break-inside: avoid; }
   #printReport th, #printReport td { border-bottom: 1px solid #d2d8df; padding: 8pt 10pt; text-align: left; }

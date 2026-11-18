@@ -417,9 +417,22 @@
     const fmtDate = ts => new Date(ts).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
     document.getElementById('printReport').innerHTML = `
       <header>
-        <p class="report-label">Task Timer · Time report</p>
+        <div class="report-masthead">
+          <div class="report-brand">
+            <img src="icons/icon.svg" alt="" width="40" height="40">
+            <strong>Task Timer</strong>
+          </div>
+          <div class="report-stamp">
+            <strong>Time report</strong>
+            <span>Generated ${fmtDate(t)}</span>
+          </div>
+        </div>
         <h1>${esc(list.name)}</h1>
-        <div class="meta">Created: ${fmtDate(list.createdAt)}<br>Closed: ${fmtDate(list.closedAt)}<br>Tasks: ${list.tasks.length}<br>Generated: ${fmtDate(t)}</div>
+        <dl class="report-details">
+          <div><dt>Created</dt><dd>${fmtDate(list.createdAt)}</dd></div>
+          <div><dt>Closed</dt><dd>${fmtDate(list.closedAt)}</dd></div>
+          <div><dt>Tasks</dt><dd>${list.tasks.length}</dd></div>
+        </dl>
       </header>
       <table>
         <thead><tr><th class="n">#</th><th>Task</th><th class="t">Time</th></tr></thead>

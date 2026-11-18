@@ -3,6 +3,11 @@
 Version numbers follow MAJOR.MINOR.PATCH: a big change, new features, fixes.
 The version is set in `js/version.js` and shown in the app under ⋯ on the Lists screen.
 
+## 2.4.9 — 2026-11-18
+
+- Print on white paper in both themes and give the report header more breathing room
+- Add the Task Timer logo to the report header
+
 ## 2.4.8 — 2026-11-18
 
 - Validate backup identifiers and escape them in HTML attributes
