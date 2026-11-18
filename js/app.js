@@ -408,14 +408,17 @@
       <td class="n">${i + 1}</td><td>${esc(task.name)}</td><td class="t">${S.fmt(S.elapsed(task, t))}</td></tr>`).join('');
     const fmtDate = ts => new Date(ts).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
     document.getElementById('printReport').innerHTML = `
-      <h1>${esc(list.name)}</h1>
-      <div class="meta">Created: ${fmtDate(list.createdAt)}<br>Closed: ${fmtDate(list.closedAt)}<br>Tasks: ${list.tasks.length}</div>
+      <header>
+        <p class="report-label">Task Timer · Time report</p>
+        <h1>${esc(list.name)}</h1>
+        <div class="meta">Created: ${fmtDate(list.createdAt)}<br>Closed: ${fmtDate(list.closedAt)}<br>Tasks: ${list.tasks.length}<br>Generated: ${fmtDate(t)}</div>
+      </header>
       <table>
         <thead><tr><th class="n">#</th><th>Task</th><th class="t">Time</th></tr></thead>
-        <tbody>${rows}</tbody>
-        <tfoot><tr><td></td><td>Total time</td><td class="t">${S.fmt(S.listTotal(list, t))}</td></tr></tfoot>
-      </table>
-      <div class="footer">Generated: ${fmtDate(t)}, Task Timer</div>`;
+        <tbody>${rows}
+          <tr class="report-total"><th scope="row" colspan="2">Total time</th><td class="t">${S.fmt(S.listTotal(list, t))}</td></tr>
+        </tbody>
+      </table>`;
     // The page title becomes the default file name in "Save as PDF".
     const prevTitle = document.title;
     document.title = `${list.name} - time report`;
