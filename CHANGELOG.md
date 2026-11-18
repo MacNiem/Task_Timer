@@ -3,6 +3,10 @@
 Version numbers follow MAJOR.MINOR.PATCH: a big change, new features, fixes.
 The version is set in `js/version.js` and shown in the app under ⋯ on the Lists screen.
 
+## 2.4.6 — 2026-11-18
+
+- Show Undo at the bottom of the screen above the timer and update bar
+
 ## 2.4.5 — 2026-11-18
 
 - Show Undo as an overlay without shifting the app layout

@@ -249,6 +249,12 @@
   // ---------- Dock with the running task's clock ----------
   const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></svg>';
   const $dock = document.getElementById('dock');
+  const $update = document.getElementById('update');
+  const toastClearance = new ResizeObserver(() => {
+    $toast.style.setProperty('--toast-clearance', `${$dock.offsetHeight + $update.offsetHeight}px`);
+  });
+  toastClearance.observe($dock);
+  toastClearance.observe($update);
 
   function renderDock() {
     const r = dockTask();
